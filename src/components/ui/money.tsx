@@ -71,7 +71,14 @@ export function Money({
     <span className={cn("tabular", className)}>
       {money0(shown)}
       {currency ? (
-        <span className={cn("ml-1 text-[0.62em] font-normal text-muted-foreground", unitClassName)}>
+        <span
+          className={cn(
+            /* a percent sign belongs against its number, a currency
+               name reads as a separate word */
+            currency === "%" ? "text-[0.72em] font-normal" : "ml-1 text-[0.62em] font-normal text-muted-foreground",
+            unitClassName,
+          )}
+        >
           {currency}
         </span>
       ) : null}

@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TabBar } from "@/components/layout/tab-bar";
 import { TopBar } from "@/components/layout/top-bar";
 import { MoreSheet } from "@/components/layout/more-sheet";
+import { Appearance } from "@/components/layout/appearance";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh">
+      <Appearance />
       <Sidebar overCount={overCount} />
 
       <div className="lg:pl-[102px]">
