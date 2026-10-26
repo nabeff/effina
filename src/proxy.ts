@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAuthRoute = path.startsWith("/sign-in");
+  const isAuthRoute = path.startsWith("/sign-in") || path.startsWith("/auth/");
 
   /* the offline fallback has to render with no session, since
      being offline is exactly when the session cannot be checked */

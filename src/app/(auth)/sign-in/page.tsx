@@ -8,6 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+/** Google will not allow its mark to be recoloured, so it is drawn as is. */
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-[18px]" aria-hidden="true">
+      <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.8c-.5 2.8-2 5.1-4.4 6.7v5.6h7.1c4.2-3.8 6.6-9.5 6.6-16.5z" />
+      <path fill="#34A853" d="M24 46c6 0 11-2 14.5-5.4l-7.1-5.6c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.8C8 41 15.4 46 24 46z" />
+      <path fill="#FBBC05" d="M11.8 28.1c-.4-1.3-.7-2.7-.7-4.1s.3-2.8.7-4.1v-5.8H4.5A22 22 0 0 0 2 24c0 3.6.9 6.9 2.5 9.9l7.3-5.8z" />
+      <path fill="#EA4335" d="M24 10.5c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 3.9 30 2 24 2 15.4 2 8 7 4.5 14.1l7.3 5.8c1.7-5.2 6.5-9.4 12.2-9.4z" />
+    </svg>
+  );
+}
+
 /**
  * One form for both signing in and creating an account, because
  * asking which you want before asking for an email is a question
@@ -20,7 +32,14 @@ export default function SignInPage() {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState<{ text: string; bad: boolean } | null>(null);
+  /* read straight off the address rather than through
+     useSearchParams, which would need a Suspense boundary just to
+     prerender a page that has no other dynamic part */
+  const [message, setMessage] = useState<{ text: string; bad: boolean } | null>(() => {
+    if (typeof window === "undefined") return null;
+    const e = new URLSearchParams(window.location.search).get("error");
+    return e ? { text: e, bad: true } : null;
+  });
   const [busy, setBusy] = useState(false);
 
   /* Supabase errors are written for developers, so they are
@@ -34,6 +53,32 @@ export default function SignInPage() {
     if (m.includes("email")) return "Check the email address.";
     if (m.includes("fetch") || m.includes("network")) return "No connection. Try again in a moment.";
     return "Could not do that. Try again.";
+  }
+
+  /**
+   * Google sends the browser away and brings it back to the
+   * callback, which swaps the code for a session. Nothing is
+   * stored here, so there is no password to lose.
+   */
+  async function google() {
+    setBusy(true);
+    setMessage({ text: "Opening Google", bad: false });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) throw error;
+    } catch (err) {
+      setBusy(false);
+      const m = String((err as Error)?.message ?? "").toLowerCase();
+      setMessage({
+        text: m.includes("provider") || m.includes("not enabled")
+          ? "Google sign in is not switched on for this app yet."
+          : friendly(err),
+        bad: true,
+      });
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -92,6 +137,25 @@ export default function SignInPage() {
                 {m === "in" ? "Sign in" : "Create account"}
               </button>
             ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy}
+            onClick={google}
+            className="mb-4 h-11 w-full"
+          >
+            <GoogleMark />
+            Continue with Google
+          </Button>
+
+          <div className="mb-4 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border-soft" />
+            <span className="text-[11.5px] font-medium tracking-[0.03em] text-subtle-foreground uppercase">
+              or
+            </span>
+            <span className="h-px flex-1 bg-border-soft" />
           </div>
 
           <div className="space-y-1.5">
