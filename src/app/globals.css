@@ -1,26 +1,286 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   DESIGN TOKENS
+   Every colour, radius and curve in the app is defined here and
+   nowhere else. A component that writes a hex value is a bug.
+
+   Dark is the default, because that is how the app is used.
+   Light is a deliberate second theme, not an inversion.
+   ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* surfaces */
+  --background: #000000;
+  --card: #1c1c1e;
+  --card-2: #2c2c2e;
+  --popover: #2c2c2e;
+  --elevated: #2c2c2e;
+
+  /* text */
+  --foreground: #ffffff;
+  --muted-foreground: #8e8e93;
+  --subtle-foreground: #48484a;
+
+  /* lines */
+  --border: #38383a;
+  --border-soft: #2c2c2e;
+  --input: #2c2c2e;
+  --ring: #30d158;
+
+  /* meaning, never decoration */
+  --primary: #30d158;
+  --primary-foreground: #00320f;
+  --destructive: #ff453a;
+  --warning: #ff9f0a;
+
+  /* the nine envelope hues, in the validated order.
+     No two adjacent are confusable under any colour vision. */
+  --hue-green: #30d158;
+  --hue-teal: #64d2ff;
+  --hue-indigo: #5e5ce6;
+  --hue-purple: #bf5af2;
+  --hue-pink: #ff375f;
+  --hue-orange: #ff9f0a;
+  --hue-yellow: #ffd60a;
+  --hue-mint: #63e6e2;
+  --hue-brown: #ac8e68;
+
+  /* fills, for anything resting on a surface */
+  --fill: rgb(120 120 128 / 0.36);
+  --fill-2: rgb(120 120 128 / 0.22);
+
+  /* glass, used by the rail, tab bar and sheets */
+  --glass: rgb(34 34 36 / 0.56);
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-highlight: rgb(255 255 255 / 0.1);
+  --glass-blur: saturate(180%) blur(24px);
+
+  /* shadcn expects these names */
+  --secondary: var(--card-2);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--card-2);
+  --accent-foreground: var(--foreground);
+  --muted: var(--card-2);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+
+  /* charts read the hues directly */
+  --chart-1: var(--hue-green);
+  --chart-2: var(--hue-teal);
+  --chart-3: var(--hue-indigo);
+  --chart-4: var(--hue-orange);
+  --chart-5: var(--hue-pink);
+
+  /* geometry */
+  --radius: 1.25rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.625rem;
+
+  /* one curve for everything, the Apple spring */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.25, 0.8, 0.3, 1);
+
+  color-scheme: dark;
 }
+
+.light {
+  --background: #f2f2f7;
+  --card: #ffffff;
+  --card-2: #f2f2f7;
+  --popover: #ffffff;
+  --elevated: #ffffff;
+
+  --foreground: #000000;
+  --muted-foreground: #6c6c70;
+  --subtle-foreground: #aeaeb2;
+
+  --border: #c6c6c8;
+  --border-soft: #e5e5ea;
+  --input: #e5e5ea;
+
+  --primary: #34c759;
+  --primary-foreground: #ffffff;
+  --destructive: #ff3b30;
+  --warning: #ff9500;
+
+  --hue-green: #34c759;
+  --hue-teal: #5ac8fa;
+  --hue-indigo: #5856d6;
+  --hue-purple: #af52de;
+  --hue-pink: #ff2d55;
+  --hue-orange: #ff9500;
+  --hue-yellow: #ffcc00;
+  --hue-mint: #00c7be;
+  --hue-brown: #a2845e;
+
+  --fill: rgb(120 120 128 / 0.2);
+  --fill-2: rgb(120 120 128 / 0.12);
+
+  --glass: rgb(255 255 255 / 0.72);
+  --glass-border: rgb(0 0 0 / 0.07);
+  --glass-highlight: rgb(255 255 255 / 0.65);
+
+  color-scheme: light;
+}
+
+/* a viewer who has chosen nothing follows their system */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    --background: #f2f2f7;
+    --card: #ffffff;
+    --card-2: #f2f2f7;
+    --popover: #ffffff;
+    --elevated: #ffffff;
+    --foreground: #000000;
+    --muted-foreground: #6c6c70;
+    --subtle-foreground: #aeaeb2;
+    --border: #c6c6c8;
+    --border-soft: #e5e5ea;
+    --input: #e5e5ea;
+    --primary: #34c759;
+    --primary-foreground: #ffffff;
+    --destructive: #ff3b30;
+    --warning: #ff9500;
+    --hue-green: #34c759;
+    --hue-teal: #5ac8fa;
+    --hue-indigo: #5856d6;
+    --hue-purple: #af52de;
+    --hue-pink: #ff2d55;
+    --hue-orange: #ff9500;
+    --hue-yellow: #ffcc00;
+    --hue-mint: #00c7be;
+    --hue-brown: #a2845e;
+    --fill: rgb(120 120 128 / 0.2);
+    --fill-2: rgb(120 120 128 / 0.12);
+    --glass: rgb(255 255 255 / 0.72);
+    --glass-border: rgb(0 0 0 / 0.07);
+    --glass-highlight: rgb(255 255 255 / 0.65);
+    color-scheme: light;
+  }
+}
+
+/* ============================================================
+   Accent. Changing it redefines the primary colour itself, so
+   every green element follows with no component touched.
+   ============================================================ */
+[data-accent="violet"] { --primary: #8c64ff; --ring: #8c64ff; }
+[data-accent="teal"]   { --primary: #32bedc; --ring: #32bedc; }
+[data-accent="pink"]   { --primary: #ff5c8a; --ring: #ff5c8a; }
+[data-accent="orange"] { --primary: #ff9f0a; --ring: #ff9f0a; }
+[data-accent="white"]  { --primary: #e8e8ea; --ring: #e8e8ea; --primary-foreground: #0b0b0c; }
+
+/* corners */
+[data-radius="soft"]  { --radius: 0.875rem; }
+[data-radius="sharp"] { --radius: 0.5rem; }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-elevated: var(--elevated);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+
+  --color-hue-green: var(--hue-green);
+  --color-hue-teal: var(--hue-teal);
+  --color-hue-indigo: var(--hue-indigo);
+  --color-hue-purple: var(--hue-purple);
+  --color-hue-pink: var(--hue-pink);
+  --color-hue-orange: var(--hue-orange);
+  --color-hue-yellow: var(--hue-yellow);
+  --color-hue-mint: var(--hue-mint);
+  --color-hue-brown: var(--hue-brown);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --ease-spring: var(--ease);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* figures line up in columns everywhere they appear */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* the frosted surfaces */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 8px 32px -8px rgb(0 0 0 / 0.5),
+      inset 0 1px 0 0 var(--glass-highlight);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      background: var(--card);
+    }
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 28%, transparent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
