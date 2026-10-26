@@ -36,6 +36,10 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/sign-in");
 
+  /* the offline fallback has to render with no session, since
+     being offline is exactly when the session cannot be checked */
+  if (path === "/offline") return response;
+
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";

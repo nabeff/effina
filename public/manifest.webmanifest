@@ -1,0 +1,21 @@
+{
+  "name": "Nabil Effina",
+  "short_name": "Effina",
+  "description": "Bills first, then the rest split into envelopes so every dirham has a job.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Add money", "url": "/log", "description": "Log something you spent" },
+    { "name": "Envelopes", "url": "/envelopes", "description": "What is left in each" }
+  ]
+}
