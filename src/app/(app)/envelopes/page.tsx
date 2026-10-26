@@ -49,7 +49,7 @@ export default function EnvelopesPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-col divide-y divide-border-soft">
+      <div data-tour="envelopes" className="flex flex-col divide-y divide-border-soft">
         {st.envRows.map((row) => (
           <EnvelopeRow
             key={row.id}

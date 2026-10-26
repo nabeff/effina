@@ -16,6 +16,7 @@ import {
   planMoves, donorRank, billsDue,
   notices, noticeCount, loggingGap, closePrompt,
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
+  makeHundred, recommendedSplit,
 } from "./index";
 import type { Envelope, EnvelopeRow } from "@/types/budget";
 
@@ -427,5 +428,49 @@ describe("donorRank", () => {
       row("Fun money", "spend"),
     ].sort((a, b) => donorRank(a) - donorRank(b));
     expect(order[0].name).toBe("Fun money");
+  });
+});
+
+/* ---- setup draft ----
+   makeHundred moves percentages, so it is pinned. */
+describe("makeHundred", () => {
+  it("leaves a split that already adds up alone", () => {
+    const rec = recommendedSplit();
+    expect(rec.reduce((a, e) => a + e.pct, 0)).toBe(100);
+    expect(makeHundred(rec)).toEqual(rec);
+  });
+
+  it("scales a short split up to exactly 100", () => {
+    const out = makeHundred([
+      { name: "A", pct: 30, kind: "spend", icon: "", hue: "green" },
+      { name: "B", pct: 20, kind: "spend", icon: "", hue: "teal" },
+    ]);
+    expect(out.reduce((a, e) => a + e.pct, 0)).toBeCloseTo(100, 5);
+  });
+
+  it("scales an over split back down to exactly 100", () => {
+    const out = makeHundred([
+      { name: "A", pct: 70, kind: "spend", icon: "", hue: "green" },
+      { name: "B", pct: 60, kind: "spend", icon: "", hue: "teal" },
+      { name: "C", pct: 30, kind: "save", icon: "", hue: "mint" },
+    ]);
+    expect(out.reduce((a, e) => a + e.pct, 0)).toBeCloseTo(100, 5);
+  });
+
+  it("spreads evenly when every share is zero", () => {
+    const out = makeHundred([
+      { name: "A", pct: 0, kind: "spend", icon: "", hue: "green" },
+      { name: "B", pct: 0, kind: "spend", icon: "", hue: "teal" },
+      { name: "C", pct: 0, kind: "save", icon: "", hue: "mint" },
+    ]);
+    expect(out.reduce((a, e) => a + e.pct, 0)).toBeCloseTo(100, 5);
+  });
+
+  it("keeps the biggest envelope the biggest", () => {
+    const out = makeHundred([
+      { name: "Small", pct: 10, kind: "spend", icon: "", hue: "green" },
+      { name: "Big", pct: 50, kind: "spend", icon: "", hue: "teal" },
+    ]);
+    expect(out[1].pct).toBeGreaterThan(out[0].pct);
   });
 });

@@ -7,6 +7,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { MoreSheet } from "@/components/layout/more-sheet";
 import { Appearance } from "@/components/layout/appearance";
 import { AddSheet } from "@/components/features/transactions/add-sheet";
+import { OnboardingGate } from "@/components/features/onboarding/gate";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 
@@ -41,6 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
       <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} overCount={overCount} />
       <AddSheet open={addOpen} onOpenChange={setAddOpen} />
+      {mounted ? <OnboardingGate /> : null}
     </div>
   );
 }

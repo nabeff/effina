@@ -29,7 +29,9 @@ export default function DashboardPage() {
 
   return (
     <>
-      <HeroCard data={data} st={st} />
+      <div data-tour="hero">
+        <HeroCard data={data} st={st} />
+      </div>
 
       <Section
         title={`Your ${money(st.base, currency)}`}
@@ -39,7 +41,9 @@ export default function DashboardPage() {
             : "Where this month's money sits right now"
         }
       >
-        <SplitBar st={st} currency={currency} />
+        <div data-tour="split">
+          <SplitBar st={st} currency={currency} />
+        </div>
       </Section>
 
       <section className="mb-8 grid gap-3 sm:grid-cols-3">

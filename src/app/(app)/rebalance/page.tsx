@@ -101,6 +101,7 @@ export default function RebalancePage() {
       </section>
 
       <Section
+        data-tour="rebalance"
         title="The plan"
         sub="Fun money goes first, then girlfriend, then everyday spending, then emergency, then savings. Tax and debt are never touched, because that money is owed."
         pad={plan.moves.length === 0}

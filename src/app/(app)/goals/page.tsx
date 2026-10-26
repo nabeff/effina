@@ -144,7 +144,7 @@ export default function GoalsPage() {
       </Section>
 
       {data.goals.length ? (
-        <section className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <section data-tour="goals" className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {data.goals.map((g) => (
             <GoalCard
               key={g.id}

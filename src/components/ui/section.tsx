@@ -8,15 +8,19 @@ interface SectionProps {
   className?: string;
   /** false when the child draws its own padding, like a row list */
   pad?: boolean;
+  /** names this section as a stop on the tour */
+  "data-tour"?: string;
 }
 
 /**
  * The shape every screen is built from: a heading, an optional
  * explanation, optional tools on the right, and a card.
  */
-export function Section({ title, sub, tools, children, className, pad = true }: SectionProps) {
+export function Section({
+  title, sub, tools, children, className, pad = true, ...rest
+}: SectionProps) {
   return (
-    <section className={cn("mb-8", className)}>
+    <section className={cn("mb-8", className)} {...rest}>
       {title ? (
         <div className="mb-3 flex min-h-[46px] w-full flex-wrap items-start gap-3">
           <h2 className="min-w-0 flex-1 text-xl font-bold tracking-[-0.024em]">

@@ -58,6 +58,7 @@ export default function LogPage() {
   return (
     <>
       <Section
+        data-tour="add"
         title="Add a line"
         sub="Amount first, so it takes a few seconds on your phone."
       >
@@ -65,6 +66,7 @@ export default function LogPage() {
       </Section>
 
       <Section
+        data-tour="log"
         title={monthName(st.month, true)}
         sub={`In ${money(st.income, currency)}, out ${money(st.spent, currency)}, difference ${money(st.income - st.spent, currency)}`}
         pad={false}

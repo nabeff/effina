@@ -14,3 +14,4 @@ export * from "./goals";
 export * from "./tax";
 export * from "./rebalance";
 export * from "./notices";
+export * from "./onboarding";

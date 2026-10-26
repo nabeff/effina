@@ -95,6 +95,7 @@ export default function SetupPage() {
   return (
     <>
       <Section
+        data-tour="setup"
         title="Income"
         sub="Used to plan a month before any invoice lands."
       >
