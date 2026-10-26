@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2, ArrowDownLeft } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Money } from "@/components/ui/money";
 import { cn } from "@/lib/utils";
 import { monthName } from "@/lib/budget";

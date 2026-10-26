@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
 import { Section } from "@/components/ui/section";
@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/select";
 import { TxForm } from "@/components/features/transactions/tx-form";
 import { TxRow } from "@/components/features/transactions/tx-row";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { deleteTransaction } from "@/lib/supabase/mutations";
 import { monthName } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
 
 export default function LogPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
   const [search, setSearch] = useState("");

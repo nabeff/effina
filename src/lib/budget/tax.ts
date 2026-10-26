@@ -8,7 +8,6 @@
 
 import type { BudgetData } from "@/types/budget";
 import { stats } from "./stats";
-import { closedMonth } from "./timing";
 
 export function taxYear(month: string): string {
   return month.slice(0, 4);

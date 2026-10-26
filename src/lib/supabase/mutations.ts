@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Bill, Envelope, Goal, Settings, Transaction } from "@/types/budget";
+import type { Bill, Envelope, Goal, Settings } from "@/types/budget";
 
 /* ---- transactions ---- */
 

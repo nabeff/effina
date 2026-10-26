@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 import { Section } from "@/components/ui/section";
@@ -8,7 +7,8 @@ import { Stat } from "@/components/ui/stat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GoalCard } from "@/components/features/goals/goal-card";
 import { GoalTimeline } from "@/components/features/charts/goal-timeline";
-import { SKIP, useBudget, useBudgetMutation } from "@/lib/hooks/use-budget";
+import { useMounted } from "@/lib/hooks/use-mounted";
+import { useBudget, useBudgetMutation } from "@/lib/hooks/use-budget";
 import { patchGoal } from "@/lib/supabase/mutations";
 import {
   goalState, goalDone, goalForecast, goalSplit, goalTimeline,
@@ -31,8 +31,7 @@ const verdictColor = {
 } as const;
 
 export default function GoalsPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, isLoading } = useBudget();
 

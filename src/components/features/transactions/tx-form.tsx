@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { DateField } from "@/components/ui/date-field";
 import { cn } from "@/lib/utils";
 import { useBudgetMutation } from "@/lib/hooks/use-budget";
 import { addTransaction } from "@/lib/supabase/mutations";
@@ -28,12 +29,25 @@ const schema = z.object({
 type Values = z.input<typeof schema>;
 
 /** Amount first, so it takes a few seconds on a phone. */
-export function TxForm({ data }: { data: BudgetData }) {
+export function TxForm({
+  data, envelopeId, onDone, layout = "row",
+}: {
+  data: BudgetData;
+  /** preselects an envelope, for a quick add from its row */
+  envelopeId?: string;
+  onDone?: () => void;
+  layout?: "row" | "stack";
+}) {
   const [direction, setDirection] = useState<"in" | "out">("out");
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { amount: "" as unknown as number, note: "", date: todayISO() },
+    defaultValues: {
+      amount: "" as unknown as number,
+      note: "",
+      date: todayISO(),
+      envelopeId,
+    },
   });
 
   const mutation = useBudgetMutation(
@@ -59,7 +73,13 @@ export function TxForm({ data }: { data: BudgetData }) {
           ? `Added ${amount} ${data.settings.currency}`
           : `${amount} ${data.settings.currency} logged`,
       );
-      form.reset({ amount: "" as unknown as number, note: "", date: todayISO() });
+      form.reset({
+        amount: "" as unknown as number,
+        note: "",
+        date: todayISO(),
+        envelopeId,
+      });
+      onDone?.();
     } catch {
       toast.error("Could not save that. Your budget is safe.");
     }
@@ -88,7 +108,13 @@ export function TxForm({ data }: { data: BudgetData }) {
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]">
+      <div
+        className={cn(
+          "grid gap-3",
+          layout === "row" &&
+            "sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]",
+        )}
+      >
         <div className="space-y-1.5">
           <Label htmlFor="amount">Amount</Label>
           <div className="relative">
@@ -112,7 +138,13 @@ export function TxForm({ data }: { data: BudgetData }) {
               onValueChange={(v) => form.setValue("envelopeId", v ?? undefined)}
             >
               <SelectTrigger id="envelope">
-                <SelectValue placeholder="Pick one" />
+                {/* Base UI renders the raw value unless told how to
+                    turn it into a label, and the value is a uuid */}
+                <SelectValue placeholder="Pick one">
+                  {(v: unknown) =>
+                    spendable.find((e) => e.id === v)?.name ?? "Pick one"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {spendable.map((e) => (
@@ -134,11 +166,19 @@ export function TxForm({ data }: { data: BudgetData }) {
 
         <div className="space-y-1.5">
           <Label htmlFor="date">Date</Label>
-          <Input id="date" type="date" {...form.register("date")} />
+          <DateField
+            id="date"
+            value={form.watch("date")}
+            onChange={(iso) => form.setValue("date", iso)}
+          />
         </div>
 
         <div className="flex items-end">
-          <Button type="submit" disabled={mutation.isPending} className="h-[42px] w-full sm:w-auto">
+          <Button
+            type="submit"
+            disabled={mutation.isPending}
+            className={cn("h-[42px] w-full", layout === "row" && "sm:w-auto")}
+          >
             <Plus className="size-4" />
             {direction === "in" ? "Add income" : "Add expense"}
           </Button>

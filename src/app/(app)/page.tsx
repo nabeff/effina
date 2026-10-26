@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 import { HeroCard } from "@/components/features/dashboard/hero-card";
 import { SplitBar } from "@/components/features/dashboard/split-bar";
@@ -12,8 +12,7 @@ import { money } from "@/lib/utils/money";
 export default function DashboardPage() {
   /* today differs between the build and the browser, so the month
      is only resolved once mounted */
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
 

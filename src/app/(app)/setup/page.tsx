@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LogOut, Wand2 } from "lucide-react";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Section } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Choices, SettingRow } from "@/components/features/setup/setting-row";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { updateSettings } from "@/lib/supabase/mutations";
 import { createClient } from "@/lib/supabase/client";
@@ -45,8 +46,7 @@ const leftovers = [
 
 export default function SetupPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
   const [incomeDraft, setIncomeDraft] = useState("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,14 @@ import { Section } from "@/components/ui/section";
 import { Stat } from "@/components/ui/stat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { updateSettings } from "@/lib/supabase/mutations";
 import { debtState, taxState, taxYear } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
 
 export default function TaxPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats } = useMonth(mounted ? undefined : SKIP);
   const [paidDraft, setPaidDraft] = useState("");

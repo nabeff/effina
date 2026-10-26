@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TabBar } from "@/components/layout/tab-bar";
 import { TopBar } from "@/components/layout/top-bar";
 import { MoreSheet } from "@/components/layout/more-sheet";
 import { Appearance } from "@/components/layout/appearance";
+import { AddSheet } from "@/components/features/transactions/add-sheet";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   /* The month depends on today, which differs between the build
      and the browser, so it is only read once mounted. Reading it
      during prerender would bake a stale month into the HTML. */
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { stats } = useMonth(mounted ? undefined : SKIP);
   const overCount = mounted ? stats?.over.length ?? 0 : 0;
@@ -34,10 +36,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <TabBar
         overCount={overCount}
-        onAdd={() => { /* wired to the add sheet in the next pass */ }}
+        onAdd={() => setAddOpen(true)}
         onMore={() => setMoreOpen(true)}
       />
       <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} overCount={overCount} />
+      <AddSheet open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }

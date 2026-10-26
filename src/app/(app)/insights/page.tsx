@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   AlertCircle, Archive, ArrowDownToLine, CheckCircle2, ChartPie,
@@ -10,6 +10,7 @@ import { Section } from "@/components/ui/section";
 import { Stat } from "@/components/ui/stat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 import { notices } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
@@ -43,8 +44,7 @@ const toneColor: Record<Tone, string> = {
 };
 
 export default function InsightsPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
 

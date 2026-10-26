@@ -31,32 +31,43 @@ export function Money({
   animate = true,
   duration = 520,
 }: MoneyProps) {
+  /* shown is where the count is now, start is where this run of
+     the animation began. Both are state rather than refs because
+     the render reads them, and React's own pattern for deriving
+     from a changed prop is to keep the previous one in state. */
   const [shown, setShown] = useState(value);
-  const from = useRef(value);
+  const [start, setStart] = useState(value);
+  const [prev, setPrev] = useState(value);
   const frame = useRef<number>(undefined);
 
+  if (prev !== value) {
+    setPrev(value);
+    /* with animation off there is nothing to count from, so the
+       new value is simply what we show */
+    setStart(animate ? shown : value);
+    if (!animate) setShown(value);
+  }
+
   useEffect(() => {
-    if (!animate) {
-      setShown(value);
-      return;
-    }
+    if (!animate) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = from.current;
+    const t0 = performance.now();
 
+    /* someone who asked for less motion gets the figure on the
+       next frame rather than counted up to */
     if (reduce || Math.abs(value - start) < 1) {
-      from.current = value;
-      setShown(value);
-      return;
+      frame.current = requestAnimationFrame(() => setShown(value));
+      return () => {
+        if (frame.current) cancelAnimationFrame(frame.current);
+      };
     }
 
-    const t0 = performance.now();
     const step = (now: number) => {
       const p = Math.min(1, (now - t0) / duration);
       const eased = 1 - Math.pow(1 - p, 3);
       setShown(start + (value - start) * eased);
       if (p < 1) frame.current = requestAnimationFrame(step);
-      else from.current = value;
     };
 
     if (frame.current) cancelAnimationFrame(frame.current);
@@ -65,7 +76,7 @@ export function Money({
     return () => {
       if (frame.current) cancelAnimationFrame(frame.current);
     };
-  }, [value, animate, duration]);
+  }, [value, start, animate, duration]);
 
   return (
     <span className={cn("tabular", className)}>

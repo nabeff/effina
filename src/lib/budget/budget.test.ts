@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { seedBudget, ENV_IDS, BILL_IDS } from "./fixture";
+import { seedBudget, ENV_IDS } from "./fixture";
 import {
   stats, billTotal, totalPct, emergencyTarget, capNotes,
   splitParts, paceState, todayState, affordState, spendPotUsedPct,
@@ -15,7 +15,7 @@ import {
   taxState, debtState, incomeForYear,
   planMoves, donorRank, billsDue,
   notices, noticeCount, loggingGap, closePrompt,
-  baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, thisMonth, monthKey,
+  baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
 } from "./index";
 import type { Envelope, EnvelopeRow } from "@/types/budget";
 

@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Section } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EnvelopeRow } from "@/components/features/envelopes/envelope-row";
+import { AddSheet } from "@/components/features/transactions/add-sheet";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
 import { money } from "@/lib/utils/money";
 
 export default function EnvelopesPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
+  const [addTo, setAddTo] = useState<string | null>(null);
 
   const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
 
@@ -21,6 +22,7 @@ export default function EnvelopesPage() {
   const currency = data.settings.currency;
 
   return (
+    <>
     <Section
       title="Envelopes"
       sub={`Your ${money(st.flex, currency)} after bills, split across ${st.envRows.length}. The line marks today.`}
@@ -54,10 +56,17 @@ export default function EnvelopesPage() {
             row={row}
             st={st}
             currency={currency}
-            onAdd={() => toast(`Quick add to ${row.name} arrives with the add sheet`)}
+            onAdd={() => setAddTo(row.id)}
           />
         ))}
       </div>
     </Section>
+
+    <AddSheet
+      open={addTo !== null}
+      onOpenChange={(v) => { if (!v) setAddTo(null); }}
+      envelopeId={addTo ?? undefined}
+    />
+    </>
   );
 }

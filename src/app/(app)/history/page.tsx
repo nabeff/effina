@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { Archive, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Section } from "@/components/ui/section";
 import { Stat } from "@/components/ui/stat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HistoryChart, type HistoryPoint } from "@/components/features/charts/history-chart";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { closeMonth, reopenMonth } from "@/lib/supabase/mutations";
 import { stats } from "@/lib/budget";
@@ -22,8 +23,7 @@ function label(month: string): string {
 }
 
 export default function HistoryPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
 
