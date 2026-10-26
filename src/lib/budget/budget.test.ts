@@ -17,6 +17,7 @@ import {
   notices, noticeCount, loggingGap, closePrompt,
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
   makeHundred, recommendedSplit,
+  dayStrip, nextWin, goalDone,
 } from "./index";
 import type { Envelope, EnvelopeRow } from "@/types/budget";
 
@@ -472,5 +473,65 @@ describe("makeHundred", () => {
       { name: "Big", pct: 50, kind: "spend", icon: "", hue: "teal" },
     ]);
     expect(out[1].pct).toBeGreaterThan(out[0].pct);
+  });
+});
+
+/* ---- the home page figures ---- */
+describe("dayStrip", () => {
+  const data = seedBudget(NOW);
+  const strip = dayStrip(data, 30, NOW);
+
+  it("returns one block per day, ending today", () => {
+    expect(strip).toHaveLength(30);
+    expect(strip[29].today).toBe(true);
+    expect(strip[29].date).toBe("2026-10-26");
+    expect(strip.filter((d) => d.today)).toHaveLength(1);
+  });
+
+  it("leaves bills out, so a rent day does not flatten the rest", () => {
+    const billDay = strip.find((d) => d.date === `${MONTH}-02`);
+    expect(billDay?.spent ?? 0).toBe(0);
+  });
+
+  it("scales levels to the busiest day and never hides real spending", () => {
+    const top = Math.max(...strip.map((d) => d.spent));
+    expect(strip.find((d) => d.spent === top)?.level).toBe(4);
+    for (const d of strip) {
+      expect(d.level).toBeGreaterThanOrEqual(d.spent > 0 ? 1 : 0);
+      expect(d.level).toBeLessThanOrEqual(4);
+    }
+  });
+});
+
+describe("nextWin", () => {
+  const data = seedBudget(NOW);
+
+  it("picks the nearest finish line of every goal and the debt", () => {
+    const win = nextWin(data, MONTH, NOW);
+    expect(win).not.toBeNull();
+
+    const goalLefts = data.goals
+      .filter((g) => !goalDone(g))
+      .map((g) => goalState(data, g, NOW).left)
+      .filter((n) => n > 0);
+    const debtLeft = debtState(data, MONTH, NOW).left;
+    const nearest = Math.min(...goalLefts, debtLeft || Infinity);
+
+    expect(win!.left).toBeCloseTo(nearest, 5);
+  });
+
+  it("says what is left and names the thing", () => {
+    const win = nextWin(data, MONTH, NOW)!;
+    expect(win.text).toContain(win.name);
+    expect(win.text).toContain("to go");
+  });
+
+  it("is null once nothing is outstanding", () => {
+    const clear = {
+      ...data,
+      goals: data.goals.map((g) => ({ ...g, saved: g.price })),
+      settings: { ...data.settings, debtTotal: 0 },
+    };
+    expect(nextWin(clear, MONTH, NOW)).toBeNull();
   });
 });
