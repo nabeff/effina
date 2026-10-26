@@ -11,11 +11,13 @@ import {
 } from "@/components/ui/select";
 import { TxForm } from "@/components/features/transactions/tx-form";
 import { TxRow } from "@/components/features/transactions/tx-row";
+import { EditSheet } from "@/components/features/transactions/edit-sheet";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { deleteTransaction } from "@/lib/supabase/mutations";
 import { monthName } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
+import type { Transaction } from "@/types/budget";
 
 export default function LogPage() {
   const mounted = useMounted();
@@ -23,6 +25,7 @@ export default function LogPage() {
   const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [editing, setEditing] = useState<Transaction | null>(null);
 
   const remove = useBudgetMutation(async (id: string, { supabase }) => {
     await deleteTransaction(supabase, id);
@@ -101,7 +104,7 @@ export default function LogPage() {
                 key={t.id}
                 tx={t}
                 data={data}
-                onEdit={() => toast("Editing arrives with the edit sheet")}
+                onEdit={() => setEditing(t)}
                 onDelete={async () => {
                   try {
                     await remove.mutateAsync(t.id);
@@ -124,6 +127,13 @@ export default function LogPage() {
           </div>
         )}
       </Section>
+
+      <EditSheet
+        tx={editing}
+        data={data}
+        open={editing !== null}
+        onOpenChange={(v) => { if (!v) setEditing(null); }}
+      />
     </>
   );
 }

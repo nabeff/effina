@@ -1,11 +1,13 @@
 "use client";
 
-import { toast } from "sonner";
-import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Section } from "@/components/ui/section";
 import { Stat } from "@/components/ui/stat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GoalCard } from "@/components/features/goals/goal-card";
+import { GoalSheet } from "@/components/features/goals/goal-sheet";
 import { GoalTimeline } from "@/components/features/charts/goal-timeline";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { useBudget, useBudgetMutation } from "@/lib/hooks/use-budget";
@@ -15,6 +17,7 @@ import {
   goalVerdict, savingsPerMonth,
 } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
+import type { Goal } from "@/types/budget";
 
 const verdictIcon = {
   good: CheckCircle2,
@@ -34,6 +37,13 @@ export default function GoalsPage() {
   const mounted = useMounted();
 
   const { data, isLoading } = useBudget();
+
+  /* one sheet serves new, edit and add money, so it holds which
+     goal and which job rather than three pieces of state */
+  const [sheet, setSheet] = useState<{
+    goal: Goal | null;
+    mode: "edit" | "add-money";
+  } | null>(null);
 
   const setShare = useBudgetMutation(
     async (args: { id: string; share: number }, { supabase }) => {
@@ -90,7 +100,15 @@ export default function GoalsPage() {
         />
       </section>
 
-      <Section title="Your plan">
+      <Section
+        title="Your plan"
+        tools={
+          <Button onClick={() => setSheet({ goal: null, mode: "edit" })}>
+            <Plus className="size-4" />
+            New goal
+          </Button>
+        }
+      >
         {data.goals.length ? (
           <div className="flex items-start gap-3.5">
             <span
@@ -117,6 +135,10 @@ export default function GoalsPage() {
             <p className="mx-auto mt-1 max-w-[40ch] text-[13.5px] text-muted-foreground">
               Add what you want with its price and this works out the monthly amount and the date.
             </p>
+            <Button className="mt-4" onClick={() => setSheet({ goal: null, mode: "edit" })}>
+              <Plus className="size-4" />
+              Add your first goal
+            </Button>
           </div>
         )}
       </Section>
@@ -132,8 +154,8 @@ export default function GoalsPage() {
               share={split.find((s) => s.id === g.id)}
               currency={currency}
               onShareChange={(v) => setShare.mutate({ id: g.id, share: v })}
-              onAddMoney={() => toast("Adding money arrives with the goal sheet")}
-              onEdit={() => toast("Editing arrives with the goal sheet")}
+              onAddMoney={() => setSheet({ goal: g, mode: "add-money" })}
+              onEdit={() => setSheet({ goal: g, mode: "edit" })}
             />
           ))}
         </section>
@@ -216,6 +238,14 @@ export default function GoalsPage() {
           </div>
         </Section>
       ) : null}
+
+      <GoalSheet
+        goal={sheet?.goal ?? null}
+        mode={sheet?.mode ?? "edit"}
+        currency={currency}
+        open={sheet !== null}
+        onOpenChange={(v) => { if (!v) setSheet(null); }}
+      />
     </>
   );
 }
