@@ -275,6 +275,23 @@
   }
 }
 
+/* ============================================================
+   Inside the native shell the web view sits under the status bar,
+   so the chrome has to make room for it. A browser tab gets zero
+   from these, which is the right answer there.
+   ============================================================ */
+@layer base {
+  [data-native] body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* the native shell has no browser chrome to pull down on, so
+     an accidental drag should not bounce the whole page */
+  [data-native="ios"] body {
+    overscroll-behavior-y: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

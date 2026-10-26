@@ -6,6 +6,7 @@ import { TabBar } from "@/components/layout/tab-bar";
 import { TopBar } from "@/components/layout/top-bar";
 import { MoreSheet } from "@/components/layout/more-sheet";
 import { Appearance } from "@/components/layout/appearance";
+import { Native } from "@/components/layout/native";
 import { AddSheet } from "@/components/features/transactions/add-sheet";
 import { OnboardingGate } from "@/components/features/onboarding/gate";
 import { useMounted } from "@/lib/hooks/use-mounted";
@@ -26,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh">
       <Appearance />
+      <Native />
       <Sidebar overCount={overCount} />
 
       <div className="lg:pl-[102px]">
