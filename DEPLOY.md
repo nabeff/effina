@@ -43,6 +43,26 @@ happily and then served a 404.
 `public/sw.js` is generated. It is gitignored and excluded from
 lint.
 
+## Google sign in
+
+The button is in the app, but the provider has to be switched on
+in the Supabase dashboard first, under Authentication, Providers,
+Google. It needs a client id and secret from a Google Cloud OAuth
+client, with these redirect URLs allowed:
+
+    https://upeeszphvpxadryzafgi.supabase.co/auth/v1/callback
+
+Until it is switched on the button says so rather than failing
+silently.
+
+## Test accounts
+
+    neffina8+sync@gmail.com      the migrated budget
+    neffina8+onboard@gmail.com   a fresh account, used to test setup
+
+Delete the second one from Authentication, Users when it is no
+longer wanted.
+
 ## After deploying
 
 Check these, since each has broken before:
