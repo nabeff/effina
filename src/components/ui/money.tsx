@@ -14,6 +14,7 @@ import { money0 } from "@/lib/utils/money";
 
 interface MoneyProps {
   value: number;
+  /** an empty string renders a bare count, for things that are not money */
   currency?: string;
   className?: string;
   unitClassName?: string;
@@ -69,9 +70,11 @@ export function Money({
   return (
     <span className={cn("tabular", className)}>
       {money0(shown)}
-      <span className={cn("ml-1 text-[0.62em] font-normal text-muted-foreground", unitClassName)}>
-        {currency}
-      </span>
+      {currency ? (
+        <span className={cn("ml-1 text-[0.62em] font-normal text-muted-foreground", unitClassName)}>
+          {currency}
+        </span>
+      ) : null}
     </span>
   );
 }

@@ -287,3 +287,47 @@ export async function reopenMonth(
     .from("closed_months").delete().eq("user_id", userId).eq("month", month);
   if (error) throw error;
 }
+
+/**
+ * Field level edits. The upserts above fill every column from
+ * defaults, which is right when creating a row and destructive
+ * when changing one field, so a slider drag uses these instead.
+ */
+export async function patchGoal(
+  supabase: SupabaseClient,
+  id: string,
+  patch: Partial<Pick<Goal, "name" | "price" | "saved" | "share" | "icon" | "hue" | "note" | "position">> &
+    { targetMonth?: string },
+) {
+  const row: Record<string, unknown> = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.price !== undefined) row.price = patch.price;
+  if (patch.saved !== undefined) row.saved = patch.saved;
+  if (patch.share !== undefined) row.share = patch.share;
+  if (patch.icon !== undefined) row.icon = patch.icon;
+  if (patch.hue !== undefined) row.hue = patch.hue;
+  if (patch.note !== undefined) row.note = patch.note;
+  if (patch.position !== undefined) row.position = patch.position;
+  if (patch.targetMonth !== undefined) row.target_month = patch.targetMonth;
+
+  const { error } = await supabase.from("goals").update(row).eq("id", id);
+  if (error) throw error;
+}
+
+export async function patchEnvelope(
+  supabase: SupabaseClient,
+  id: string,
+  patch: Partial<Pick<Envelope, "name" | "pct" | "kind" | "icon" | "hue" | "note" | "position">>,
+) {
+  const row: Record<string, unknown> = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.pct !== undefined) row.pct = patch.pct;
+  if (patch.kind !== undefined) row.kind = patch.kind;
+  if (patch.icon !== undefined) row.icon = patch.icon;
+  if (patch.hue !== undefined) row.hue = patch.hue;
+  if (patch.note !== undefined) row.note = patch.note;
+  if (patch.position !== undefined) row.position = patch.position;
+
+  const { error } = await supabase.from("envelopes").update(row).eq("id", id);
+  if (error) throw error;
+}

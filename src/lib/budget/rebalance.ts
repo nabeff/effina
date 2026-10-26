@@ -8,15 +8,30 @@
 
 import type { BudgetData, MonthStats, EnvelopeRow } from "@/types/budget";
 
-/** Lower donates first. Rank 9 never donates. */
+/**
+ * Lower donates first. Rank 9 never donates.
+ *
+ * Matching is on whole words, not substrings. "Emergency fund"
+ * contains the letters of "fun", and a substring test ranked the
+ * emergency fund as the first envelope to raid, which is the exact
+ * opposite of the intended order.
+ */
+function hasWord(name: string, word: string): boolean {
+  return new RegExp(`\\b${word}\\b`).test(name);
+}
+
 export function donorRank(r: EnvelopeRow): number {
   const name = r.name.toLowerCase();
-  if (name.includes("fun")) return 0;
-  if (name.includes("girlfriend")) return 1;
+
+  /* protected first, so nothing below can claim them */
+  if (r.kind === "debt" || hasWord(name, "tax")) return 9;
+  if (hasWord(name, "emergency")) return 4;
+
+  if (hasWord(name, "fun") && !hasWord(name, "fund")) return 0;
+  if (hasWord(name, "girlfriend")) return 1;
   if (r.kind === "spend") return 2;
-  if (name.includes("emergency")) return 4;
-  if (r.kind === "save" && name.includes("saving")) return 5;
-  return 9;  /* tax, debt, anything else */
+  if (r.kind === "save" && hasWord(name, "savings")) return 5;
+  return 9;  /* anything else is left alone */
 }
 
 export interface Move {

@@ -17,6 +17,7 @@ import {
   notices, noticeCount, loggingGap, closePrompt,
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, thisMonth, monthKey,
 } from "./index";
+import type { Envelope, EnvelopeRow } from "@/types/budget";
 
 const NOW = new Date(2026, 9, 26);        // 26 October 2026
 const MONTH = monthKey(NOW);
@@ -396,5 +397,35 @@ describe("notices", () => {
       isSample: false, isAuto: false,
     });
     expect(closePrompt(d, NOW)?.month).toBe(prev);
+  });
+});
+
+/* ---- donor order ----
+   "Emergency fund" contains the letters of "fun". A substring test
+   ranked it as the first envelope to raid, the opposite of the rule,
+   so these pin the order by name. */
+describe("donorRank", () => {
+  const row = (name: string, kind: Envelope["kind"]) =>
+    ({ name, kind } as EnvelopeRow);
+
+  it("ranks fun money first and the emergency fund fourth", () => {
+    expect(donorRank(row("Fun money", "spend"))).toBe(0);
+    expect(donorRank(row("Girlfriend", "spend"))).toBe(1);
+    expect(donorRank(row("Food & daily life", "spend"))).toBe(2);
+    expect(donorRank(row("Emergency fund", "save"))).toBe(4);
+    expect(donorRank(row("Savings", "save"))).toBe(5);
+  });
+
+  it("never lets tax or debt donate", () => {
+    expect(donorRank(row("Tax reserve", "save"))).toBe(9);
+    expect(donorRank(row("Dad debt", "debt"))).toBe(9);
+  });
+
+  it("asks fun money before the emergency fund", () => {
+    const order = [
+      row("Emergency fund", "save"),
+      row("Fun money", "spend"),
+    ].sort((a, b) => donorRank(a) - donorRank(b));
+    expect(order[0].name).toBe("Fun money");
   });
 });
