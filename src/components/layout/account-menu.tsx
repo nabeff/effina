@@ -8,6 +8,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { createClient } from "@/lib/supabase/client";
+import { Mark } from "@/components/ui/mark";
 import { useProfile } from "@/lib/hooks/use-profile";
 
 /**
@@ -58,8 +59,12 @@ export function AccountMenu() {
                 onError={() => setBrokenPhoto(true)}
                 className="size-full object-cover"
               />
-            ) : (
+            ) : profile ? (
               initials
+            ) : (
+              /* the mark until we know who is signed in, rather
+                 than two letters that might be wrong */
+              <Mark className="size-[56%]" />
             )}
           </button>
         }

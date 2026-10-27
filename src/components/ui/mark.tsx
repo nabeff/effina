@@ -3,46 +3,34 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Effina mark.
+ * The Mazaj mark.
  *
- * A square divided into unequal parts, the way one month of money
- * is divided into envelopes. The parts are the real shares from
- * the default split, so the shape is the product rather than a
- * picture of a letter.
+ * Four unequal blocks nested into one square. Many things, one
+ * settled picture, and the blocks differ in size because the
+ * shares they stand for differ too.
  *
- * It reads as an E on its side, which is the only pun in it.
+ * Nothing rotates. An earlier version turned the blocks around a
+ * centre and read as a pinwheel, which is not a thing a brand
+ * can risk.
  */
-export function Mark({
-  className,
-  /** draw it in one colour instead of the envelope hues */
-  flat = false,
-}: {
-  className?: string;
-  flat?: boolean;
-}) {
-  const c = (hue: string) => (flat ? "currentColor" : `var(--hue-${hue})`);
-
+export function Mark({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 64 64"
       className={cn("block", className)}
       role="img"
-      aria-label="Effina"
+      aria-label="Mazaj"
     >
-      {/* the pot, one month of money */}
-      <rect x="6" y="6" width="52" height="52" rx="15" fill="none"
-        stroke={flat ? "currentColor" : "var(--primary)"} strokeWidth="4" />
-
-      {/* divided into three unequal bands, largest first, the way
-          the split actually falls */}
-      <rect x="17" y="18" width="30" height="6" rx="3" fill={c("green")} />
-      <rect x="17" y="29" width="21" height="6" rx="3" fill={c("teal")} />
-      <rect x="17" y="40" width="13" height="6" rx="3" fill={c("purple")} />
+      {/* the big one, top left, the way a split falls */}
+      <rect x="6" y="6" width="33" height="26" rx="3" fill="currentColor" />
+      <rect x="43" y="6" width="15" height="26" rx="3" fill="currentColor" />
+      <rect x="6" y="36" width="15" height="22" rx="3" fill="currentColor" />
+      <rect x="25" y="36" width="33" height="22" rx="3" fill="currentColor" />
     </svg>
   );
 }
 
-/** The mark as an avatar, for the rail and the wizard header. */
+/** The mark in a circle, for the rail and the wizard header. */
 export function MarkBadge({ className }: { className?: string }) {
   return (
     <span
@@ -51,7 +39,7 @@ export function MarkBadge({ className }: { className?: string }) {
         className,
       )}
     >
-      <Mark flat className="size-[58%]" />
+      <Mark className="size-[56%]" />
     </span>
   );
 }

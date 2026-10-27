@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Mark } from "@/components/ui/mark";
 
-/* The mark starts fully lit during the entrance, then settles to
-   a pool around the cursor. On a touch screen there is no cursor,
-   so it simply stays lit and slowly drifts. */
+/* The pool opens from nothing rather than from everything. It
+   used to start at full width, so the first frame of the screen
+   was the whole mark at once before it closed, which read as a
+   flash. */
 const RADIUS = 420;
-const START_RADIUS = 2400;
+const START_RADIUS = 0;
 
 /**
  * The envelope mark behind the setup wizard, revealed around the
@@ -47,8 +49,10 @@ export function Spotlight() {
 
       /* with no pointer there is nothing to follow, so the mark
          stays open rather than closing on an arbitrary point */
-      const target = pointer && !reduce ? RADIUS : START_RADIUS;
-      radius.current += (target - radius.current) * 0.025;
+      /* with no pointer there is nothing to follow, so the pool
+         rests wide rather than closing on an arbitrary point */
+      const target = reduce ? RADIUS : pointer ? RADIUS : RADIUS * 1.8;
+      radius.current += (target - radius.current) * 0.06;
 
       if (host.current) {
         const { x, y } = smooth.current;
@@ -72,7 +76,7 @@ export function Spotlight() {
       {/* always lit, so the screen is signed even on a wide
           display where the cursor sits far from the card */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 grid place-items-center">
-        <Mark className="opacity-[0.045]" />
+        <Mark className="h-[min(78vh,78vw)] w-[min(78vh,78vw)] text-primary opacity-[0.05]" />
       </div>
 
       {/* and brighter where you are actually looking */}
@@ -81,27 +85,8 @@ export function Spotlight() {
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 grid place-items-center"
       >
-        <Mark className="opacity-[0.11]" />
+        <Mark className="h-[min(78vh,78vw)] w-[min(78vh,78vw)] text-primary opacity-[0.12]" />
       </div>
     </>
-  );
-}
-
-function Mark({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 512 512"
-      className={`h-[min(135vh,135vw)] w-[min(135vh,135vw)] ${className ?? ""}`}
-    >
-      <rect
-        x="86" y="150" width="340" height="232" rx="34"
-        fill="none" stroke="var(--primary)" strokeWidth="18"
-      />
-      <path
-        d="M86 184 L256 300 L426 184"
-        fill="none" stroke="var(--primary)" strokeWidth="18"
-        strokeLinecap="round" strokeLinejoin="round"
-      />
-    </svg>
   );
 }

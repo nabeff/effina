@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MarkBadge } from "@/components/ui/mark";
 import { cn } from "@/lib/utils";
 import { BuildScreen, type Job } from "./build-screen";
 import { Spotlight } from "./spotlight";
@@ -147,9 +148,7 @@ export function Wizard({
           spotlight closed around the cursor */}
       <header className="relative z-10 flex-none px-5 pt-5 sm:px-8 sm:pt-7">
         <div className="flex items-center justify-between gap-4">
-          <span className="grid size-9 flex-none place-items-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
-            NE
-          </span>
+          <MarkBadge className="size-9 flex-none" />
 
           {!building ? (
             <>
