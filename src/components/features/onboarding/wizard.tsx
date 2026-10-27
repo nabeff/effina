@@ -32,7 +32,9 @@ export function Wizard({
   /* which way the next card should come from */
   const [back, setBack] = useState(false);
   const [building, setBuilding] = useState(false);
-  const [draft, setDraft] = useState<Draft>(() => emptyDraft(currency));
+  /* no currency until it is picked, so the field reads as a
+     question rather than an answer already given */
+  const [draft, setDraft] = useState<Draft>(() => emptyDraft(""));
   const client = useQueryClient();
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -54,7 +56,7 @@ export function Wizard({
         run: async () => {
           await updateSettings(supabase, await uid(), {
             income: draft.income,
-            currency: draft.currency || "DH",
+            currency: draft.currency || currency || "DH",
           });
         },
       },
@@ -123,7 +125,7 @@ export function Wizard({
         },
       },
     ];
-  }, [draft, client]);
+  }, [draft, client, currency]);
 
   async function skip() {
     try {

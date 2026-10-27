@@ -10,9 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { CurrencyPicker } from "@/components/ui/currency-picker";
 import { cn } from "@/lib/utils";
 import {
   BILL_PRESETS, draftBillTotal, draftFlex, draftSplitTotal, makeHundred,
@@ -32,6 +30,10 @@ export interface StepProps {
   draft: Draft;
   set: (patch: Partial<Draft>) => void;
 }
+
+/* the first step leaves this blank on purpose, so everything
+   after it needs something to show until one is picked */
+const unit = (d: Draft) => d.currency || "DH";
 
 function Head({ title, sub }: { title: string; sub: string }) {
   return (
@@ -54,36 +56,6 @@ function Tip({ icon: Icon, children }: { icon: LucideIcon; children: React.React
     </p>
   );
 }
-
-/* Real currencies, with their symbols. Morocco first because
-   that is where this is used, then whatever people actually ask
-   for. The list scrolls rather than wrapping into a wall. */
-const CURRENCIES = [
-  { code: "DH", name: "Moroccan dirham", symbol: "DH" },
-  { code: "EUR", name: "Euro", symbol: "EUR" },
-  { code: "USD", name: "US dollar", symbol: "USD" },
-  { code: "GBP", name: "Pound sterling", symbol: "GBP" },
-  { code: "CHF", name: "Swiss franc", symbol: "CHF" },
-  { code: "CAD", name: "Canadian dollar", symbol: "CAD" },
-  { code: "AUD", name: "Australian dollar", symbol: "AUD" },
-  { code: "AED", name: "UAE dirham", symbol: "AED" },
-  { code: "SAR", name: "Saudi riyal", symbol: "SAR" },
-  { code: "QAR", name: "Qatari riyal", symbol: "QAR" },
-  { code: "KWD", name: "Kuwaiti dinar", symbol: "KWD" },
-  { code: "EGP", name: "Egyptian pound", symbol: "EGP" },
-  { code: "TND", name: "Tunisian dinar", symbol: "TND" },
-  { code: "DZD", name: "Algerian dinar", symbol: "DZD" },
-  { code: "TRY", name: "Turkish lira", symbol: "TRY" },
-  { code: "SEK", name: "Swedish krona", symbol: "SEK" },
-  { code: "NOK", name: "Norwegian krone", symbol: "NOK" },
-  { code: "JPY", name: "Japanese yen", symbol: "JPY" },
-  { code: "CNY", name: "Chinese yuan", symbol: "CNY" },
-  { code: "INR", name: "Indian rupee", symbol: "INR" },
-  { code: "NGN", name: "Nigerian naira", symbol: "NGN" },
-  { code: "ZAR", name: "South African rand", symbol: "ZAR" },
-  { code: "BRL", name: "Brazilian real", symbol: "BRL" },
-  { code: "MXN", name: "Mexican peso", symbol: "MXN" },
-];
 
 /* ---- 1, what you earn ---- */
 export function StepIncome({ draft, set }: StepProps) {
@@ -109,34 +81,11 @@ export function StepIncome({ draft, set }: StepProps) {
           aria-label="Monthly income"
         />
 
-        <Select
+        <CurrencyPicker
           value={draft.currency}
-          onValueChange={(v) => { if (v) set({ currency: String(v) }); }}
-        >
-          <SelectTrigger
-            aria-label="Currency"
-            /* a plain border, since a permanently green one reads
-               as focus. The primitive sets its height off a data
-               attribute, so that has to be beaten rather than set. */
-            className="h-[46px] w-auto min-w-[100px] flex-none gap-2 rounded-[var(--radius-md)] border-input bg-input/30 px-4 text-[15px] font-bold tracking-[-0.02em] data-[size=default]:h-[46px]"
-          >
-            <SelectValue placeholder="Currency">
-              {(v: unknown) =>
-                CURRENCIES.find((c) => c.code === v)?.code ?? "Pick"
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="max-h-[320px]">
-            {CURRENCIES.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                <span className="flex items-baseline gap-3">
-                  <span className="w-[44px] font-semibold">{c.code}</span>
-                  <span className="text-[13px] text-muted-foreground">{c.name}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(code) => set({ currency: code })}
+          className="h-[46px] w-auto min-w-[112px] flex-none"
+        />
       </div>
 
       <Tip icon={Lightbulb}>
@@ -215,7 +164,7 @@ export function StepBills({ draft, set }: StepProps) {
                   aria-label={`${b.name || "Bill"} amount`}
                 />
                 <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[11px] font-semibold text-subtle-foreground">
-                  {draft.currency}
+                  {unit(draft)}
                 </span>
               </div>
               <button
@@ -247,8 +196,8 @@ export function StepBills({ draft, set }: StepProps) {
       </Button>
 
       <Tip icon={Receipt}>
-        {money(total, draft.currency)} a month in bills
-        {draft.income > 0 ? `, leaving ${money(left, draft.currency)} to divide` : ""}.
+        {money(total, unit(draft))} a month in bills
+        {draft.income > 0 ? `, leaving ${money(left, unit(draft))} to divide` : ""}.
       </Tip>
     </>
   );
@@ -266,7 +215,7 @@ export function StepSplit({ draft, set }: StepProps) {
         title="How to split what is left"
         sub={
           flex > 0
-            ? `${money(flex, draft.currency)} a month gets divided by these shares.`
+            ? `${money(flex, unit(draft))} a month gets divided by these shares.`
             : "These shares divide whatever is left after bills."
         }
       />
@@ -373,7 +322,7 @@ export function StepDebt({ draft, set }: StepProps) {
       </div>
       <Tip icon={HeartHandshake}>
         {left > 0
-          ? `${money(left, draft.currency)} still to go. There is no deadline, you set the pace.`
+          ? `${money(left, unit(draft))} still to go. There is no deadline, you set the pace.`
           : "No deadline and no pressure. You set the pace every month."}
       </Tip>
     </>
@@ -406,7 +355,7 @@ export function StepGoal({ draft, set }: StepProps) {
             onChange={(e) => set({ goalPrice: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })}
           />
           <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[11px] font-semibold text-subtle-foreground">
-            {draft.currency}
+            {unit(draft)}
           </span>
         </div>
       </div>
@@ -432,7 +381,7 @@ export function StepDone({ draft }: StepProps) {
           You are set up
         </h2>
         <p className="mt-1.5 text-[14.5px] text-muted-foreground">
-          You have <b className="font-semibold text-foreground">{money(flex, draft.currency)}</b> to split each month.
+          You have <b className="font-semibold text-foreground">{money(flex, unit(draft))}</b> to split each month.
         </p>
       </div>
 
@@ -445,7 +394,7 @@ export function StepDone({ draft }: StepProps) {
           <div key={String(label)} className="flex items-center justify-between py-3 text-[14px]">
             <span className={cn(hi ? "font-semibold" : "text-muted-foreground")}>{String(label)}</span>
             <b className={cn("font-semibold tabular", hi && "text-primary")}>
-              {money(Number(value), draft.currency)}
+              {money(Number(value), unit(draft))}
             </b>
           </div>
         ))}
