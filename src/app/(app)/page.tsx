@@ -32,6 +32,8 @@ import { NextWin } from "@/components/features/dashboard/next-win";
 import { RecentSpends } from "@/components/features/dashboard/recent-spends";
 import { WidgetShell } from "@/components/features/dashboard/widget-shell";
 import { AddWidget } from "@/components/features/dashboard/add-widget";
+import { FillPrompt } from "@/components/features/onboarding/fill-prompt";
+import { Wizard } from "@/components/features/onboarding/wizard";
 import {
   AllowanceWidget, BalanceWidget, BillsWidget, Card, CategoryWidget,
   EnvelopesWidget, GoalsWidget, InsightsWidget, RateWidget,
@@ -73,6 +75,7 @@ export default function DashboardPage() {
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [setupOpen, setSetupOpen] = useState(false);
 
   /* the layout being edited, held locally so dragging is instant
      and only written when edit mode closes */
@@ -153,6 +156,11 @@ export default function DashboardPage() {
       ? (winGoal ? goalState(data, winGoal).price : 0)
       : data.settings.debtTotal
     : 0;
+
+  /* an account with no income, no bills and no envelopes has
+     never been set up, whatever the onboarded flag says */
+  const empty =
+    st.income <= 0 && !data.bills.length && !data.envelopes.length;
 
   const saved = readLayout(
     data.settings.layoutOrder,
@@ -326,6 +334,8 @@ export default function DashboardPage() {
     <>
       <Greeting st={st} currency={currency} />
 
+      {empty && !editing ? <FillPrompt onRun={() => setSetupOpen(true)} /> : null}
+
       {warnings.length && !editing ? (
         <section className="mb-6 flex flex-col gap-2">
           {warnings.map((n, i) => {
@@ -449,6 +459,10 @@ export default function DashboardPage() {
           <LayoutGrid className="size-4" />
           Arrange this page
         </button>
+      ) : null}
+
+      {setupOpen ? (
+        <Wizard currency={currency} onClose={() => setSetupOpen(false)} />
       ) : null}
 
       <AddWidget

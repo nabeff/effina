@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BuildScreen, type Job } from "./build-screen";
+import { Spotlight } from "./spotlight";
 import { STEPS } from "./steps";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,6 +29,8 @@ export function Wizard({
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
+  /* which way the next card should come from */
+  const [back, setBack] = useState(false);
   const [building, setBuilding] = useState(false);
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(currency));
   const client = useQueryClient();
@@ -134,55 +138,88 @@ export function Wizard({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-background/80 p-4 backdrop-blur-xl">
-      <div className="glass w-full max-w-[520px] rounded-[var(--radius-xl)] p-6 sm:p-7">
-        {building ? (
-          <BuildScreen
-            jobs={jobs}
-            onDone={onClose}
-            onError={(m) => toast.error(m)}
-          />
-        ) : (
-          <>
-            <div className="mb-6 flex gap-1.5">
-              {STEPS.map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "h-1 flex-1 rounded-full transition-colors duration-300",
-                    i < step ? "bg-primary/45" : i === step ? "bg-primary" : "bg-fill-2",
-                  )}
-                />
-              ))}
-            </div>
+    <div className="fixed inset-0 z-50 isolate flex flex-col overflow-y-auto bg-background">
+      <Spotlight />
 
-            <div key={step} className="animate-in fade-in slide-in-from-right-2 duration-300">
-              <Step draft={draft} set={set} />
-            </div>
+      {/* the mark top left, so the screen is signed even with the
+          spotlight closed around the cursor */}
+      <header className="relative z-10 flex items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
+        <span className="grid size-9 place-items-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
+          NE
+        </span>
+        {!building ? (
+          <button
+            onClick={skip}
+            className="text-[13px] text-subtle-foreground transition-colors hover:text-muted-foreground"
+          >
+            Skip for now
+          </button>
+        ) : null}
+      </header>
 
-            <div className="mt-7 flex items-center gap-2">
-              {step > 0 ? (
-                <Button variant="ghost" onClick={() => setStep(step - 1)}>
-                  <ChevronLeft className="size-4" />
-                  Back
+      <div className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+        <div className="w-full max-w-[520px]">
+          {building ? (
+            <BuildScreen
+              jobs={jobs}
+              onDone={onClose}
+              onError={(m) => toast.error(m)}
+            />
+          ) : (
+            <>
+              <div className="mb-8 flex gap-1.5">
+                {STEPS.map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-1 flex-1 rounded-full transition-colors duration-300",
+                      i < step ? "bg-primary/45" : i === step ? "bg-primary" : "bg-fill-2",
+                    )}
+                  />
+                ))}
+              </div>
+
+              {/* one card at a time, sliding the way you are going */}
+              <div className="relative">
+                <AnimatePresence mode="wait" custom={back} initial={false}>
+                  <motion.div
+                    key={step}
+                    custom={back}
+                    initial={{ x: back ? -40 : 40, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: back ? 40 : -40, opacity: 0 }}
+                    transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+                  >
+                    <Step draft={draft} set={set} />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="mt-8 flex items-center gap-2">
+                {step > 0 ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => { setBack(true); setStep(step - 1); }}
+                  >
+                    <ChevronLeft className="size-4" />
+                    Back
+                  </Button>
+                ) : null}
+                <Button
+                  size="lg"
+                  className="ml-auto min-w-[150px]"
+                  onClick={() => {
+                    if (last) return setBuilding(true);
+                    setBack(false);
+                    setStep(step + 1);
+                  }}
+                >
+                  {last ? "Open the dashboard" : "Continue"}
                 </Button>
-              ) : null}
-              <Button
-                className="ml-auto min-w-[136px]"
-                onClick={() => (last ? setBuilding(true) : setStep(step + 1))}
-              >
-                {last ? "Open the dashboard" : "Continue"}
-              </Button>
-            </div>
-
-            <button
-              onClick={skip}
-              className="mx-auto mt-4 block text-[13px] text-subtle-foreground transition-colors hover:text-muted-foreground"
-            >
-              Skip for now
-            </button>
-          </>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
