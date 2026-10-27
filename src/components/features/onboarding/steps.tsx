@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   BILL_PRESETS, draftBillTotal, draftFlex, draftSplitTotal, makeHundred,
@@ -52,79 +55,85 @@ function Tip({ icon: Icon, children }: { icon: LucideIcon; children: React.React
   );
 }
 
-/* The currencies worth offering by name, Morocco first since that
-   is where this is used. Anything else is typed in. */
+/* Real currencies, with their symbols. Morocco first because
+   that is where this is used, then whatever people actually ask
+   for. The list scrolls rather than wrapping into a wall. */
 const CURRENCIES = [
-  { code: "DH", name: "Moroccan dirham" },
-  { code: "EUR", name: "Euro" },
-  { code: "USD", name: "US dollar" },
-  { code: "GBP", name: "Pound sterling" },
-  { code: "CHF", name: "Swiss franc" },
-  { code: "CAD", name: "Canadian dollar" },
-  { code: "AED", name: "UAE dirham" },
-  { code: "SAR", name: "Saudi riyal" },
-  { code: "EGP", name: "Egyptian pound" },
-  { code: "TND", name: "Tunisian dinar" },
-  { code: "DZD", name: "Algerian dinar" },
-  { code: "TRY", name: "Turkish lira" },
+  { code: "DH", name: "Moroccan dirham", symbol: "DH" },
+  { code: "EUR", name: "Euro", symbol: "EUR" },
+  { code: "USD", name: "US dollar", symbol: "USD" },
+  { code: "GBP", name: "Pound sterling", symbol: "GBP" },
+  { code: "CHF", name: "Swiss franc", symbol: "CHF" },
+  { code: "CAD", name: "Canadian dollar", symbol: "CAD" },
+  { code: "AUD", name: "Australian dollar", symbol: "AUD" },
+  { code: "AED", name: "UAE dirham", symbol: "AED" },
+  { code: "SAR", name: "Saudi riyal", symbol: "SAR" },
+  { code: "QAR", name: "Qatari riyal", symbol: "QAR" },
+  { code: "KWD", name: "Kuwaiti dinar", symbol: "KWD" },
+  { code: "EGP", name: "Egyptian pound", symbol: "EGP" },
+  { code: "TND", name: "Tunisian dinar", symbol: "TND" },
+  { code: "DZD", name: "Algerian dinar", symbol: "DZD" },
+  { code: "TRY", name: "Turkish lira", symbol: "TRY" },
+  { code: "SEK", name: "Swedish krona", symbol: "SEK" },
+  { code: "NOK", name: "Norwegian krone", symbol: "NOK" },
+  { code: "JPY", name: "Japanese yen", symbol: "JPY" },
+  { code: "CNY", name: "Chinese yuan", symbol: "CNY" },
+  { code: "INR", name: "Indian rupee", symbol: "INR" },
+  { code: "NGN", name: "Nigerian naira", symbol: "NGN" },
+  { code: "ZAR", name: "South African rand", symbol: "ZAR" },
+  { code: "BRL", name: "Brazilian real", symbol: "BRL" },
+  { code: "MXN", name: "Mexican peso", symbol: "MXN" },
 ];
 
 /* ---- 1, welcome ---- */
 export function StepWelcome({ draft, set }: StepProps) {
-  const known = CURRENCIES.some((c) => c.code === draft.currency);
-
   return (
     <>
-      <div className="mb-7 text-center">
-        <span className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-primary text-[17px] font-bold text-primary-foreground">
-          NE
-        </span>
-        <h2 className="text-[28px] leading-tight font-bold tracking-[-0.032em]">
-          Nabil Effina
+      <div className="mb-8">
+        <h2 className="text-[28px] leading-[1.1] font-bold tracking-[-0.032em] text-balance">
+          Let us set up your month
         </h2>
-        <p className="mx-auto mt-2 max-w-[34ch] text-[14.5px] leading-relaxed text-muted-foreground text-pretty">
-          Bills come out first, then whatever is left is split into envelopes so every dirham has a job.
+        <p className="mt-2.5 max-w-[38ch] text-[14.5px] leading-relaxed text-muted-foreground text-pretty">
+          Seven quick questions. By the end every dirham you earn
+          will have somewhere to be.
         </p>
       </div>
 
-      <div className="space-y-2.5">
-        <Label>What do you call your money</Label>
+      <div className="space-y-2">
+        <Label htmlFor="obCurrency">What do you call your money</Label>
 
-        <div className="flex flex-wrap gap-1.5">
-          {CURRENCIES.map((c) => (
-            <button
-              key={c.code}
-              onClick={() => set({ currency: c.code })}
-              aria-pressed={draft.currency === c.code}
-              title={c.name}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors",
-                draft.currency === c.code
-                  ? "border-transparent bg-primary text-primary-foreground"
-                  : "border-border text-muted-foreground hover:bg-fill-2 hover:text-foreground",
-              )}
-            >
-              {c.code}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2.5 pt-1">
-          <span className="text-[12.5px] text-subtle-foreground">
-            Something else
-          </span>
-          <Input
-            maxLength={6}
-            placeholder="Code"
-            aria-label="Your own currency label"
-            className={cn(
-              "h-9 w-[104px] text-center text-[13px] font-semibold",
-              !known && draft.currency ? "border-primary" : undefined,
-            )}
-            value={known ? "" : draft.currency}
-            onChange={(e) => set({ currency: e.target.value.slice(0, 6) })}
-          />
-        </div>
+        {/* one field. The code is what gets saved, the list is
+            there so nobody has to remember one. */}
+        <Select
+          value={draft.currency}
+          onValueChange={(v) => { if (v) set({ currency: String(v) }); }}
+        >
+          <SelectTrigger id="obCurrency" className="h-12 w-full text-[15px]">
+            <SelectValue placeholder="Pick your currency">
+              {(v: unknown) => {
+                const hit = CURRENCIES.find((c) => c.code === v);
+                return hit ? (
+                  <span className="flex items-baseline gap-2.5">
+                    <span className="font-semibold">{hit.code}</span>
+                    <span className="text-[13px] text-muted-foreground">{hit.name}</span>
+                  </span>
+                ) : (
+                  "Pick your currency"
+                );
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
+            {CURRENCIES.map((c) => (
+              <SelectItem key={c.code} value={c.code}>
+                <span className="flex items-baseline gap-2.5">
+                  <span className="w-[42px] font-semibold">{c.code}</span>
+                  <span className="text-[13px] text-muted-foreground">{c.name}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </>
   );

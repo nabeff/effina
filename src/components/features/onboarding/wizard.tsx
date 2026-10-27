@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BuildScreen, type Job } from "./build-screen";
@@ -225,6 +225,7 @@ export function Wizard({
                   }}
                 >
                   {last ? "Open the dashboard" : "Continue"}
+                  <ArrowRight className="size-4" />
                 </Button>
               </div>
             </>
