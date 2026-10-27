@@ -45,19 +45,44 @@ export const BILL_PRESETS: DraftBill[] = [
   { name: "Subscriptions", amount: 0, dueDay: 12, icon: "audio-lines", hue: "mint" },
 ];
 
-/** The same nine envelopes the app ships with, at their set shares. */
+/**
+ * Every envelope the platform can set up, with the share it
+ * takes when it is on.
+ *
+ * These are categories anybody recognises. The old list carried
+ * one person's actual life in it, which is fine for one person
+ * and wrong for a product.
+ *
+ * `core` ones are on by default because almost everyone has
+ * them, and their shares sum to 100 on their own. The rest are
+ * offered and start off, so adding one rebalances the others.
+ */
+export interface EnvelopeOption extends DraftEnvelope {
+  id: string;
+  core?: boolean;
+  /** what it covers, for the people who have not met envelopes */
+  hint: string;
+}
+
+export const ENVELOPE_OPTIONS: EnvelopeOption[] = [
+  { id: "essentials", name: "Food and essentials", pct: 30, kind: "spend", icon: "shopping-cart", hue: "indigo", core: true, hint: "Groceries, household, the everyday" },
+  { id: "savings", name: "Savings", pct: 25, kind: "save", icon: "piggy-bank", hue: "green", core: true, hint: "What you are putting away" },
+  { id: "emergency", name: "Emergency fund", pct: 15, kind: "save", icon: "shield-check", hue: "mint", core: true, hint: "The months you do not see coming" },
+  { id: "transport", name: "Transport", pct: 15, kind: "spend", icon: "car", hue: "teal", core: true, hint: "Fuel, fares, the car" },
+  { id: "personal", name: "Personal", pct: 15, kind: "spend", icon: "party-popper", hue: "yellow", core: true, hint: "Yours to spend without thinking" },
+  { id: "health", name: "Health and insurance", pct: 8, kind: "spend", icon: "heart-pulse", hue: "pink", hint: "Cover, medicine, appointments" },
+  { id: "work", name: "Work and tools", pct: 8, kind: "spend", icon: "briefcase", hue: "orange", hint: "Software, gear, anything the job needs" },
+  { id: "family", name: "Family", pct: 10, kind: "spend", icon: "users", hue: "purple", hint: "People you look after or give to" },
+  { id: "learning", name: "Learning", pct: 6, kind: "spend", icon: "graduation-cap", hue: "teal", hint: "Courses, books, anything you are getting better at" },
+  { id: "tax", name: "Tax", pct: 12, kind: "save", icon: "percent", hue: "brown", hint: "Set aside before it is owed" },
+  { id: "debt", name: "Paying someone back", pct: 10, kind: "debt", icon: "heart-handshake", hue: "purple", hint: "A loan, a card, money owed to a person" },
+];
+
+/** What a new account starts with, before anything is chosen. */
 export function recommendedSplit(): DraftEnvelope[] {
-  return [
-    { name: "Food & daily life", pct: 16, kind: "spend", icon: "shopping-cart", hue: "indigo" },
-    { name: "Savings", pct: 20, kind: "save", icon: "piggy-bank", hue: "green" },
-    { name: "Business & tools", pct: 7, kind: "spend", icon: "briefcase", hue: "orange" },
-    { name: "Transport", pct: 6, kind: "spend", icon: "car", hue: "teal" },
-    { name: "Girlfriend", pct: 10, kind: "spend", icon: "gift", hue: "pink" },
-    { name: "Emergency fund", pct: 12, kind: "save", icon: "shield-check", hue: "mint" },
-    { name: "Dad debt", pct: 11, kind: "debt", icon: "heart-handshake", hue: "purple" },
-    { name: "Fun money", pct: 8, kind: "spend", icon: "party-popper", hue: "yellow" },
-    { name: "Tax reserve", pct: 10, kind: "save", icon: "percent", hue: "brown" },
-  ];
+  return ENVELOPE_OPTIONS.filter((e) => e.core).map(
+    ({ name, pct, kind, icon, hue }) => ({ name, pct, kind, icon, hue }),
+  );
 }
 
 export function emptyDraft(currency = "DH"): Draft {

@@ -13,7 +13,8 @@ import { Slider } from "@/components/ui/slider";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 import { cn } from "@/lib/utils";
 import {
-  BILL_PRESETS, draftBillTotal, draftFlex, draftSplitTotal, makeHundred,
+  BILL_PRESETS, draftBillTotal, draftFlex, draftSplitTotal,
+  ENVELOPE_OPTIONS, makeHundred,
   type Draft, type DraftBill,
 } from "@/lib/budget";
 import { money, money0 } from "@/lib/utils/money";
@@ -209,16 +210,58 @@ export function StepSplit({ draft, set }: StepProps) {
   const total = draftSplitTotal(draft);
   const ok = Math.abs(total - 100) < 0.05;
 
+  const has = (name: string) => draft.split.some((e) => e.name === name);
+
+  /* turning one on takes its share from the others, so the total
+     stays at 100 and nobody has to do the arithmetic */
+  function toggle(opt: (typeof ENVELOPE_OPTIONS)[number]) {
+    if (has(opt.name)) {
+      const rest = draft.split.filter((e) => e.name !== opt.name);
+      return set({ split: makeHundred(rest) });
+    }
+    const { name, pct, kind, icon, hue } = opt;
+    const room = Math.max(0, 100 - pct);
+    const scaled = draft.split.map((e) => ({
+      ...e,
+      pct: Math.round((e.pct / (total || 100)) * room * 10) / 10,
+    }));
+    set({ split: makeHundred([...scaled, { name, pct, kind, icon, hue }]) });
+  }
+
   return (
     <>
       <Head
-        title="How to split what is left"
+        title="What should the money cover"
         sub={
           flex > 0
-            ? `${money(flex, unit(draft))} a month gets divided by these shares.`
-            : "These shares divide whatever is left after bills."
+            ? `${money(flex, unit(draft))} a month, once bills are paid.`
+            : "Pick what matters, then set how much each one takes."
         }
       />
+
+      {/* choose the areas first. A wall of nine sliders asks you
+          to care about categories you may not have. */}
+      <div className="mb-5 flex flex-wrap gap-1.5">
+        {ENVELOPE_OPTIONS.map((opt) => {
+          const on = has(opt.name);
+          return (
+            <button
+              key={opt.id}
+              onClick={() => toggle(opt)}
+              aria-pressed={on}
+              title={opt.hint}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
+                on
+                  ? "border-transparent bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-fill-2 hover:text-foreground",
+              )}
+            >
+              {opt.name}
+            </button>
+          );
+        })}
+      </div>
 
       <div
         className="mb-4 flex items-center gap-3 rounded-[var(--radius-md)] px-3.5 py-3"
@@ -244,14 +287,13 @@ export function StepSplit({ draft, set }: StepProps) {
         </span>
         {!ok ? (
           <Button size="sm" variant="secondary" onClick={() => set({ split: makeHundred(draft.split) })}>
-            Make 100%
+            Even it out
           </Button>
         ) : null}
       </div>
 
-      {/* the way Apple lays a slider row out: the label and its
-          value on one line, the track directly under it, the
-          figures right aligned and tabular so they never jump */}
+      {/* the name and its value on one line, the track beneath,
+          figures right aligned and tabular so they do not jump */}
       <div className="flex flex-col divide-y divide-border-soft">
         {draft.split.map((e, i) => (
           <div key={e.name} className="py-3 first:pt-0 last:pb-0">
@@ -280,8 +322,6 @@ export function StepSplit({ draft, set }: StepProps) {
                 })
               }
               aria-label={`${e.name} share`}
-              /* the filled part carries the accent, the rest is a
-                 hairline. Nine hues turned the step into a rainbow. */
               className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-0 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:shadow-[0_1px_3px_rgb(0_0_0/0.4)] [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-fill-2"
             />
           </div>
@@ -298,12 +338,12 @@ export function StepDebt({ draft, set }: StepProps) {
     <>
       <Head
         title="Anyone you are paying back"
-        sub="Optional. Family, a friend, a loan outside the bank. Skip this if there is nobody."
+        sub="Optional. A loan, a card, money owed to someone. Skip this if there is nobody."
       />
       <div className="space-y-1.5">
         <Label htmlFor="obDebtName">Who</Label>
         <Input
-          id="obDebtName" placeholder="Dad" className="h-[42px] text-[14.5px]"
+          id="obDebtName" placeholder="A bank, a friend, a card" className="h-[42px] text-[14.5px]"
           value={draft.debtName}
           onChange={(e) => set({ debtName: e.target.value })}
         />
