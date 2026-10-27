@@ -269,7 +269,7 @@ export default function DashboardPage() {
     strip: !st.future ? (
       <Section
         title="The last 30 days"
-        sub="Bills are left out, so this is only what you chose to spend."
+        sub="Each square is one day. Darker means you spent more, and bills are left out."
         className="mb-0"
       >
         <DayStrip days={strip} currency={currency} />
