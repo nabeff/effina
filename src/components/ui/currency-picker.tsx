@@ -123,11 +123,10 @@ export function CurrencyPicker({
                 <span className="w-[42px] flex-none text-[13.5px] font-bold">
                   {c.code}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13.5px]">{c.name}</span>
-                  <span className="block truncate text-[11.5px] text-subtle-foreground">
-                    {c.where}
-                  </span>
+                {/* the country is searchable but not shown, so a
+                    row is one line and the code lines up with it */}
+                <span className="min-w-0 flex-1 truncate text-[13.5px]">
+                  {c.name}
                 </span>
                 {c.code === value ? (
                   <Check className="size-4 flex-none text-primary" />
