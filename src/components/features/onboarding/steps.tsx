@@ -249,21 +249,26 @@ export function StepSplit({ draft, set }: StepProps) {
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-3.5">
+      {/* the way Apple lays a slider row out: the label and its
+          value on one line, the track directly under it, the
+          figures right aligned and tabular so they never jump */}
+      <div className="flex flex-col divide-y divide-border-soft">
         {draft.split.map((e, i) => (
-          <div key={e.name}>
-            <div className="mb-1.5 flex items-baseline gap-2 text-[13.5px]">
+          <div key={e.name} className="py-3 first:pt-0 last:pb-0">
+            <div className="mb-2 flex items-baseline gap-2.5">
               <span
-                className="size-[9px] flex-none rounded-[3px]"
+                className="size-[8px] flex-none rounded-full"
                 style={{ background: `var(--hue-${e.hue})` }}
               />
-              <span className="min-w-0 flex-1 truncate font-medium">{e.name}</span>
-              <span className="font-semibold tabular">{e.pct}%</span>
+              <span className="min-w-0 flex-1 truncate text-[14px]">{e.name}</span>
               {flex > 0 ? (
-                <span className="w-16 text-right text-xs text-subtle-foreground tabular">
+                <span className="text-[13px] text-subtle-foreground tabular">
                   {money0((flex * e.pct) / 100)}
                 </span>
               ) : null}
+              <span className="w-[44px] text-right text-[14px] font-semibold tabular">
+                {e.pct}%
+              </span>
             </div>
             <Slider
               value={[e.pct]} min={0} max={60} step={1}
@@ -275,10 +280,9 @@ export function StepSplit({ draft, set }: StepProps) {
                 })
               }
               aria-label={`${e.name} share`}
-              /* one accent across all nine. Painting each track its
-                 own hue turned the step into a rainbow, and the dot
-                 beside the name already says which envelope it is. */
-              className="[&_[data-slot=slider-range]]:bg-muted-foreground [&_[data-slot=slider-thumb]]:size-[15px] [&_[data-slot=slider-thumb]]:border-muted-foreground [&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-fill-2"
+              /* the filled part carries the accent, the rest is a
+                 hairline. Nine hues turned the step into a rainbow. */
+              className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-0 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:shadow-[0_1px_3px_rgb(0_0_0/0.4)] [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-fill-2"
             />
           </div>
         ))}

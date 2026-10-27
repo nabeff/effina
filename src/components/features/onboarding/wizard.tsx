@@ -9,6 +9,7 @@ import { AccountMenu } from "@/components/layout/account-menu";
 import { cn } from "@/lib/utils";
 import { BuildScreen, type Job } from "./build-screen";
 import { Spotlight } from "./spotlight";
+import { Dividing } from "./dividing";
 import { STEPS } from "./steps";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,9 @@ export function Wizard({
   /* which way the next card should come from */
   const [back, setBack] = useState(false);
   const [building, setBuilding] = useState(false);
+  /* the beat after the split, where the answers first become a
+     picture rather than a form */
+  const [dividing, setDividing] = useState(false);
   /* no currency until it is picked, so the field reads as a
      question rather than an answer already given */
   const [draft, setDraft, draftStore] = useResumable<Draft>(
@@ -46,6 +50,7 @@ export function Wizard({
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
+  const SPLIT_STEP = 2;
   const Step = STEPS[step];
   const last = step === STEPS.length - 1;
 
@@ -199,7 +204,16 @@ export function Wizard({
 
       <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-5 py-8 sm:px-8">
         <div className="w-full max-w-[520px]">
-          {building ? (
+          {dividing ? (
+            <Dividing
+              draft={draft}
+              onDone={() => {
+                setDividing(false);
+                setBack(false);
+                setStep(step + 1);
+              }}
+            />
+          ) : building ? (
             <BuildScreen
               jobs={jobs}
               onDone={onClose}
@@ -238,6 +252,9 @@ export function Wizard({
                         className="ml-auto min-w-[150px]"
                         onClick={() => {
                           if (last) return setBuilding(true);
+                          /* pause on the split, the one answer
+                             worth showing back before moving on */
+                          if (step === SPLIT_STEP) return setDividing(true);
                           setBack(false);
                           setStep(step + 1);
                         }}

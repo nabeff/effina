@@ -7,7 +7,7 @@ import { Mark } from "@/components/ui/mark";
    used to start at full width, so the first frame of the screen
    was the whole mark at once before it closed, which read as a
    flash. */
-const RADIUS = 120;
+const RADIUS = 210;
 const START_RADIUS = 0;
 
 /**
