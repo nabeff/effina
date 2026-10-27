@@ -54,6 +54,21 @@ padding in `globals.css` keys off.
 `tap()` in the same file is a short haptic, silent anywhere it is
 not available, which includes every browser.
 
+## If a build hangs
+
+`xcodebuild` can sit in "Resolve Package Graph" indefinitely on a
+clean derived data folder, with no output and no CPU. Resolve the
+packages on their own first, then build:
+
+    cd ios/App
+    xcodebuild -project App.xcodeproj -resolvePackageDependencies
+    xcodebuild -project App.xcodeproj -scheme App \
+      -sdk iphonesimulator -configuration Debug \
+      -destination 'generic/platform=iOS Simulator' build
+
+Opening the project in Xcode once also settles it, since Xcode can
+show the prompts the command line cannot.
+
 ## Before the App Store
 
 - Set the bundle id and a real team in Xcode. It is currently
