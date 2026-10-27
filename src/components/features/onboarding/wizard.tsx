@@ -17,6 +17,7 @@ import {
   updateSettings, upsertBill, upsertEnvelope, upsertGoal,
 } from "@/lib/supabase/mutations";
 import { emptyDraft, type Draft } from "@/lib/budget";
+import { useResumable } from "@/lib/hooks/use-resumable";
 
 /**
  * Seven steps that edit a draft, then one screen that writes it.
@@ -29,13 +30,18 @@ export function Wizard({
   currency?: string;
   onClose: () => void;
 }) {
-  const [step, setStep] = useState(0);
+  /* both survive a refresh, so reloading halfway does not throw
+     the answers away and start again */
+  const [step, setStep, stepStore] = useResumable("effina.setup.step", () => 0);
   /* which way the next card should come from */
   const [back, setBack] = useState(false);
   const [building, setBuilding] = useState(false);
   /* no currency until it is picked, so the field reads as a
      question rather than an answer already given */
-  const [draft, setDraft] = useState<Draft>(() => emptyDraft(""));
+  const [draft, setDraft, draftStore] = useResumable<Draft>(
+    "effina.setup.draft",
+    () => emptyDraft(""),
+  );
   const client = useQueryClient();
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -123,9 +129,16 @@ export function Wizard({
         run: async () => {
           await updateSettings(supabase, await uid(), { onboarded: true });
           await client.invalidateQueries({ queryKey: BUDGET_KEY });
+          /* the answers are in the account now, so the half
+             filled copy in the browser is no longer wanted */
+          stepStore.clear();
+          draftStore.clear();
         },
       },
     ];
+    /* the stores are stable for the life of the wizard, and
+       listing them would rebuild every job on each keystroke */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft, client, currency]);
 
   async function skip() {
@@ -137,6 +150,8 @@ export function Wizard({
     } catch {
       /* skipping should never block the way out */
     }
+    stepStore.clear();
+    draftStore.clear();
     onClose();
   }
 

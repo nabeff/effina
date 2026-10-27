@@ -275,8 +275,10 @@ export function StepSplit({ draft, set }: StepProps) {
                 })
               }
               aria-label={`${e.name} share`}
-              className="[&_[data-slot=slider-range]]:bg-(--h) [&_[data-slot=slider-thumb]]:size-[15px] [&_[data-slot=slider-thumb]]:border-(--h) [&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-fill-2"
-              style={{ ["--h" as string]: `var(--hue-${e.hue})` }}
+              /* one accent across all nine. Painting each track its
+                 own hue turned the step into a rainbow, and the dot
+                 beside the name already says which envelope it is. */
+              className="[&_[data-slot=slider-range]]:bg-muted-foreground [&_[data-slot=slider-thumb]]:size-[15px] [&_[data-slot=slider-thumb]]:border-muted-foreground [&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-fill-2"
             />
           </div>
         ))}
