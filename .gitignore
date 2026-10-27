@@ -13,3 +13,7 @@ next-env.d.ts
 *.tsbuildinfo
 public/sw.js
 public/workbox-*.js
+
+# Capacitor native projects, regenerated with npx cap add
+/ios/App/App/public
+/android/app/src/main/assets/public

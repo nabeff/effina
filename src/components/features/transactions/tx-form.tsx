@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useBudgetMutation } from "@/lib/hooks/use-budget";
 import { addTransaction } from "@/lib/supabase/mutations";
 import { todayISO } from "@/lib/budget";
+import { tap } from "@/components/layout/native";
 import type { BudgetData } from "@/types/budget";
 
 const schema = z.object({
@@ -67,6 +68,7 @@ export function TxForm({
   async function onSubmit(values: Values) {
     try {
       await mutation.mutateAsync({ ...values, direction });
+      void tap();
       const amount = Number(values.amount).toLocaleString("en-US");
       toast.success(
         direction === "in"

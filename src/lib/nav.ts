@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  LayoutGrid, ReceiptText, WalletCards, Target,
+  LayoutGrid, ReceiptText, WalletCards, Target, FileText,
   ArrowLeftRight, Percent, History, Lightbulb, Settings2,
 } from "lucide-react";
 
@@ -15,6 +15,7 @@ export interface Tab {
 export const TABS: Tab[] = [
   { id: "dash",   href: "/",           name: "Dashboard", short: "Home",     icon: LayoutGrid },
   { id: "log",    href: "/log",        name: "Money log", short: "Log",      icon: ReceiptText },
+  { id: "bills",  href: "/bills",      name: "Bills",     short: "Bills",    icon: FileText },
   { id: "env",    href: "/envelopes",  name: "Envelopes", short: "Wallet",   icon: WalletCards },
   { id: "goals",  href: "/goals",      name: "Goals",     short: "Goals",    icon: Target },
   { id: "rebal",  href: "/rebalance",  name: "Rebalance", short: "Balance",  icon: ArrowLeftRight },
@@ -26,4 +27,4 @@ export const TABS: Tab[] = [
 
 /** The five that earn a permanent slot on a phone. */
 export const PHONE_TABS = ["dash", "add", "env", "goals", "more"];
-export const MORE_TABS = ["log", "rebal", "tax", "hist", "ins", "set"];
+export const MORE_TABS = ["log", "bills", "rebal", "tax", "hist", "ins", "set"];

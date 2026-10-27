@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   dayStrip, goalState, nextWin, notices, recentSpends, todayISO,
 } from "@/lib/budget";
+import { tap } from "@/components/layout/native";
 import { money } from "@/lib/utils/money";
 import type { Tone, Transaction } from "@/types/budget";
 
@@ -102,6 +103,7 @@ export default function DashboardPage() {
     again.mutate(tx, {
       onSuccess: () => {
         setRepeating(null);
+        void tap();
         toast.success(`${money(tx.amount, currency)} logged again`);
       },
       onError: (e) => {
