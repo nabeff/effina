@@ -54,21 +54,31 @@ padding in `globals.css` keys off.
 `tap()` in the same file is a short haptic, silent anywhere it is
 not available, which includes every browser.
 
-## The first build is slow, and looks stuck
+## The iOS build has not been run yet
 
-`xcodebuild` sits on "Resolve Package Graph" for a long time on a
-clean checkout, printing nothing. It is not hung. Capacitor ships
-its Capacitor and Cordova frameworks as binary xcframework zips,
-and that line is covering the download.
+The project is generated and configured, but it has never been
+compiled. `xcodebuild` sits on "Resolve Package Graph" forever,
+because Capacitor ships its Capacitor and Cordova frameworks as
+binary xcframework zips and Swift Package Manager cannot fetch
+them from the environment this was set up in.
 
-To watch it rather than guess, resolve the packages on their own
-first, where the progress is visible:
+`swift package resolve` exits 0 and leaves the artifact folders
+empty, which is the tell. The same files download in seconds with
+curl, so the network is fine and SPM's own fetcher is the thing
+being blocked.
 
-    cd ios/App/CapApp-SPM
-    swift package resolve
+Run it once from a normal terminal, or just open the project in
+Xcode and press build:
 
-Then build from `ios/App`. The second build is fast, because the
-artifacts are cached in the derived data folder.
+    cd ios/App && open App.xcodeproj
+
+Then confirm the artifacts actually landed, since an empty folder
+is the failure mode:
+
+    du -sh CapApp-SPM/.build/artifacts
+
+Android has the same shape of risk and has not been compiled
+either. Check both before promising anyone a build.
 
 ## Before the App Store
 
