@@ -81,6 +81,10 @@
   --radius-lg: 1.25rem;
   --radius-xl: 1.625rem;
 
+  /* One radius for every control. An input beside a select beside
+     a button must agree exactly, so none of them picks its own. */
+  --radius-control: 0.75rem;
+
   /* one curve for everything, the Apple spring */
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out: cubic-bezier(0.25, 0.8, 0.3, 1);
@@ -223,6 +227,7 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --radius-control: 0.75rem;
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
