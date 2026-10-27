@@ -87,53 +87,58 @@ const CURRENCIES = [
 
 /* ---- 1, welcome ---- */
 export function StepWelcome({ draft, set }: StepProps) {
+  const hit = CURRENCIES.find((c) => c.code === draft.currency);
+
   return (
     <>
-      <div className="mb-8">
-        <h2 className="text-[28px] leading-[1.1] font-bold tracking-[-0.032em] text-balance">
-          Let us set up your month
+      <div className="mb-9">
+        <h2 className="text-[clamp(30px,5vw,40px)] leading-[1.05] font-bold tracking-[-0.036em] text-balance">
+          Let us set up
+          <br />
+          your month
         </h2>
-        <p className="mt-2.5 max-w-[38ch] text-[14.5px] leading-relaxed text-muted-foreground text-pretty">
+        <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-muted-foreground text-pretty">
           Seven quick questions. By the end every dirham you earn
           will have somewhere to be.
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="obCurrency">What do you call your money</Label>
+      {/* the answer is three letters, so the control is the size
+          of three letters rather than a slab across the page */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+        <Label htmlFor="obCurrency" className="text-[15px]">
+          Your money is in
+        </Label>
 
-        {/* one field. The code is what gets saved, the list is
-            there so nobody has to remember one. */}
         <Select
           value={draft.currency}
           onValueChange={(v) => { if (v) set({ currency: String(v) }); }}
         >
-          <SelectTrigger id="obCurrency" className="h-12 w-full text-[15px]">
-            <SelectValue placeholder="Pick your currency">
-              {(v: unknown) => {
-                const hit = CURRENCIES.find((c) => c.code === v);
-                return hit ? (
-                  <span className="flex items-baseline gap-2.5">
-                    <span className="font-semibold">{hit.code}</span>
-                    <span className="text-[13px] text-muted-foreground">{hit.name}</span>
-                  </span>
-                ) : (
-                  "Pick your currency"
-                );
-              }}
+          <SelectTrigger
+            id="obCurrency"
+            className="h-11 w-auto min-w-[112px] gap-2 rounded-full border-2 border-primary bg-transparent px-4 text-[17px] font-bold tracking-[-0.02em] text-primary"
+          >
+            <SelectValue placeholder="Pick one">
+              {(v: unknown) =>
+                CURRENCIES.find((c) => c.code === v)?.code ?? "Pick one"
+              }
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
+          <SelectContent className="max-h-[320px]">
             {CURRENCIES.map((c) => (
               <SelectItem key={c.code} value={c.code}>
-                <span className="flex items-baseline gap-2.5">
-                  <span className="w-[42px] font-semibold">{c.code}</span>
+                <span className="flex items-baseline gap-3">
+                  <span className="w-[44px] font-semibold">{c.code}</span>
                   <span className="text-[13px] text-muted-foreground">{c.name}</span>
                 </span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+
+        {hit ? (
+          <span className="text-[14px] text-muted-foreground">{hit.name}</span>
+        ) : null}
       </div>
     </>
   );
