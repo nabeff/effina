@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { MarkBadge } from "@/components/ui/mark";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -112,9 +113,7 @@ export default function SignInPage() {
     <main className="grid min-h-dvh place-items-center p-5">
       <div className="w-full max-w-[420px]">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-            NE
-          </div>
+          <MarkBadge className="mx-auto mb-4 size-14" />
           <h1 className="text-2xl font-bold tracking-[-0.028em]">Nabil Effina</h1>
           <p className="mx-auto mt-1.5 max-w-[34ch] text-[14.5px] leading-relaxed text-muted-foreground">
             Bills come out first, then whatever is left is split into envelopes

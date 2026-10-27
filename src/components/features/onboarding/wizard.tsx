@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MarkBadge } from "@/components/ui/mark";
+import { AccountMenu } from "@/components/layout/account-menu";
 import { cn } from "@/lib/utils";
 import { BuildScreen, type Job } from "./build-screen";
 import { Spotlight } from "./spotlight";
@@ -148,7 +148,9 @@ export function Wizard({
           spotlight closed around the cursor */}
       <header className="relative z-10 flex-none px-5 pt-5 sm:px-8 sm:pt-7">
         <div className="flex items-center justify-between gap-4">
-          <MarkBadge className="size-9 flex-none" />
+          {/* the account, not the logo again. The mark is
+              already the background of this screen. */}
+          <AccountMenu />
 
           {!building ? (
             <>

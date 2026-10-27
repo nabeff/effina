@@ -7,7 +7,7 @@ import { Mark } from "@/components/ui/mark";
    used to start at full width, so the first frame of the screen
    was the whole mark at once before it closed, which read as a
    flash. */
-const RADIUS = 420;
+const RADIUS = 150;
 const START_RADIUS = 0;
 
 /**
@@ -51,7 +51,7 @@ export function Spotlight() {
          stays open rather than closing on an arbitrary point */
       /* with no pointer there is nothing to follow, so the pool
          rests wide rather than closing on an arbitrary point */
-      const target = reduce ? RADIUS : pointer ? RADIUS : RADIUS * 1.8;
+      const target = pointer && !reduce ? RADIUS : RADIUS * 1.2;
       radius.current += (target - radius.current) * 0.06;
 
       if (host.current) {
@@ -59,7 +59,7 @@ export function Spotlight() {
         const r = Math.round(radius.current);
         /* the fade ends short of the edge, or the half lit pixels
            read as a grey ring on a near black ground */
-        const mask = `radial-gradient(circle ${r}px at ${x}px ${y}px, black 0%, black ${Math.round(r * 0.62)}px, transparent ${Math.round(r * 0.95)}px)`;
+        const mask = `radial-gradient(circle ${r}px at ${x}px ${y}px, black 0%, black ${Math.round(r * 0.55)}px, transparent ${Math.round(r * 0.98)}px)`;
         host.current.style.maskImage = mask;
         host.current.style.webkitMaskImage = mask;
       }
@@ -73,19 +73,16 @@ export function Spotlight() {
 
   return (
     <>
-      {/* always lit, so the screen is signed even on a wide
-          display where the cursor sits far from the card */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 grid place-items-center">
-        <Mark className="h-[min(78vh,78vw)] w-[min(78vh,78vw)] text-primary opacity-[0.05]" />
-      </div>
-
-      {/* and brighter where you are actually looking */}
+      {/* only what the cursor is over. A second always lit layer
+          showed the whole mark, which defeats the point. */}
       <div
         ref={host}
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 grid place-items-center"
       >
-        <Mark className="h-[min(78vh,78vw)] w-[min(78vh,78vw)] text-primary opacity-[0.12]" />
+        {/* soft and a touch smaller, so it reads as a ground
+            rather than a graphic sitting behind the words */}
+        <Mark className="h-[min(58vh,58vw)] w-[min(58vh,58vw)] text-primary opacity-[0.14] blur-[1.5px]" />
       </div>
     </>
   );
