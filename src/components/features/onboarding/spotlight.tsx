@@ -68,25 +68,40 @@ export function Spotlight() {
   }, [pointer]);
 
   return (
-    <div
-      ref={host}
-      aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 grid place-items-center"
-    >
-      <svg
-        viewBox="0 0 512 512"
-        className="h-[min(135vh,135vw)] w-[min(135vh,135vw)] opacity-[0.07]"
+    <>
+      {/* always lit, so the screen is signed even on a wide
+          display where the cursor sits far from the card */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 grid place-items-center">
+        <Mark className="opacity-[0.045]" />
+      </div>
+
+      {/* and brighter where you are actually looking */}
+      <div
+        ref={host}
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 grid place-items-center"
       >
-        <rect
-          x="86" y="150" width="340" height="232" rx="34"
-          fill="none" stroke="var(--primary)" strokeWidth="18"
-        />
-        <path
-          d="M86 184 L256 300 L426 184"
-          fill="none" stroke="var(--primary)" strokeWidth="18"
-          strokeLinecap="round" strokeLinejoin="round"
-        />
-      </svg>
-    </div>
+        <Mark className="opacity-[0.11]" />
+      </div>
+    </>
+  );
+}
+
+function Mark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      className={`h-[min(135vh,135vw)] w-[min(135vh,135vw)] ${className ?? ""}`}
+    >
+      <rect
+        x="86" y="150" width="340" height="232" rx="34"
+        fill="none" stroke="var(--primary)" strokeWidth="18"
+      />
+      <path
+        d="M86 184 L256 300 L426 184"
+        fill="none" stroke="var(--primary)" strokeWidth="18"
+        strokeLinecap="round" strokeLinejoin="round"
+      />
+    </svg>
   );
 }
