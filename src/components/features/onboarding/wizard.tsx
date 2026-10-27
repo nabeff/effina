@@ -203,32 +203,35 @@ export function Wizard({
                     transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
                   >
                     <Step draft={draft} set={set} />
+
+                    {/* the buttons travel with the question. Left
+                        outside, they sat still while the card slid
+                        past them and the step looked stuck. */}
+                    <div className="mt-8 flex items-center gap-2">
+                      {step > 0 ? (
+                        <Button
+                          variant="ghost"
+                          onClick={() => { setBack(true); setStep(step - 1); }}
+                        >
+                          <ChevronLeft className="size-4" />
+                          Back
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="lg"
+                        className="ml-auto min-w-[150px]"
+                        onClick={() => {
+                          if (last) return setBuilding(true);
+                          setBack(false);
+                          setStep(step + 1);
+                        }}
+                      >
+                        {last ? "Open the dashboard" : "Continue"}
+                        <ArrowRight className="size-4" />
+                      </Button>
+                    </div>
                   </motion.div>
                 </AnimatePresence>
-              </div>
-
-              <div className="mt-8 flex items-center gap-2">
-                {step > 0 ? (
-                  <Button
-                    variant="ghost"
-                    onClick={() => { setBack(true); setStep(step - 1); }}
-                  >
-                    <ChevronLeft className="size-4" />
-                    Back
-                  </Button>
-                ) : null}
-                <Button
-                  size="lg"
-                  className="ml-auto min-w-[150px]"
-                  onClick={() => {
-                    if (last) return setBuilding(true);
-                    setBack(false);
-                    setStep(step + 1);
-                  }}
-                >
-                  {last ? "Open the dashboard" : "Continue"}
-                  <ArrowRight className="size-4" />
-                </Button>
               </div>
             </>
           )}
