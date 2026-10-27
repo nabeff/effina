@@ -138,26 +138,48 @@ export function Wizard({
   }
 
   return (
-    <div className="fixed inset-0 z-50 isolate flex flex-col overflow-y-auto bg-background">
+    <div className="fixed inset-0 z-50 isolate flex flex-col overflow-hidden bg-background">
       <Spotlight />
 
       {/* the mark top left, so the screen is signed even with the
           spotlight closed around the cursor */}
-      <header className="relative z-10 flex items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
-        <span className="grid size-9 place-items-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
-          NE
-        </span>
+      <header className="relative z-10 flex-none px-5 pt-5 sm:px-8 sm:pt-7">
+        <div className="flex items-center justify-between gap-4">
+          <span className="grid size-9 flex-none place-items-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
+            NE
+          </span>
+
+          {!building ? (
+            <>
+              <span className="text-[12.5px] font-semibold tracking-[0.02em] text-muted-foreground tabular">
+                Step {step + 1} of {STEPS.length}
+              </span>
+              <button
+                onClick={skip}
+                className="flex-none text-[13px] text-subtle-foreground transition-colors hover:text-muted-foreground"
+              >
+                Skip for now
+              </button>
+            </>
+          ) : null}
+        </div>
+
         {!building ? (
-          <button
-            onClick={skip}
-            className="text-[13px] text-subtle-foreground transition-colors hover:text-muted-foreground"
-          >
-            Skip for now
-          </button>
+          <div className="mt-4 flex gap-1.5">
+            {STEPS.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "h-1 flex-1 rounded-full transition-colors duration-300",
+                  i < step ? "bg-primary/45" : i === step ? "bg-primary" : "bg-fill-2",
+                )}
+              />
+            ))}
+          </div>
         ) : null}
       </header>
 
-      <div className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-5 py-8 sm:px-8">
         <div className="w-full max-w-[520px]">
           {building ? (
             <BuildScreen
@@ -167,18 +189,6 @@ export function Wizard({
             />
           ) : (
             <>
-              <div className="mb-8 flex gap-1.5">
-                {STEPS.map((_, i) => (
-                  <span
-                    key={i}
-                    className={cn(
-                      "h-1 flex-1 rounded-full transition-colors duration-300",
-                      i < step ? "bg-primary/45" : i === step ? "bg-primary" : "bg-fill-2",
-                    )}
-                  />
-                ))}
-              </div>
-
               {/* one card at a time, sliding the way you are going */}
               <div className="relative">
                 <AnimatePresence mode="wait" custom={back} initial={false}>
