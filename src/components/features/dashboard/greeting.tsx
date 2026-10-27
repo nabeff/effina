@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Money } from "@/components/ui/money";
 import { monthName } from "@/lib/budget";
+import { useProfile } from "@/lib/hooks/use-profile";
 import type { MonthStats } from "@/types/budget";
 
 function partOfDay(h: number): string {
@@ -18,15 +19,14 @@ function partOfDay(h: number): string {
  * The top of the page. The greeting dates the view, and the
  * balance is the one figure worth seeing before anything else.
  */
-export function Greeting({
-  st, currency, name,
-}: {
-  st: MonthStats;
-  currency: string;
-  name?: string;
-}) {
+export function Greeting({ st, currency }: { st: MonthStats; currency: string }) {
   const now = new Date();
   const hello = partOfDay(now.getHours());
+  const profile = useProfile();
+
+  /* just the first name. The full one turns a greeting into a
+     form letter. */
+  const name = profile?.name?.trim().split(/\s+/)[0] ?? "";
 
   return (
     <motion.div
