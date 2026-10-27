@@ -67,13 +67,14 @@ export function WidgetShell({
           : {}),
       }}
       className={cn(
-        "relative col-span-1 min-w-0",
+        "relative col-span-1 flex min-w-0 flex-col",
         "sm:col-[span_var(--span-sm)/span_var(--span-sm)]",
         "lg:col-[span_var(--span)/span_var(--span)]",
         isDragging && "z-30",
       )}
     >
-      {children}
+      {/* the child fills the cell, so cards in a row end level */}
+      <div className="flex-1 [&>*]:h-full">{children}</div>
 
       {editing ? (
         <>

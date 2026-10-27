@@ -398,7 +398,9 @@ export default function DashboardPage() {
         onDragEnd={onDragEnd}
       >
         <SortableContext items={visible} strategy={rectSortingStrategy}>
-          <div className="mb-8 grid grid-cols-1 items-start gap-3 sm:grid-cols-6 lg:grid-cols-12">
+          {/* stretch, not items-start. A short widget beside a tall
+              one left a hole the height of the difference. */}
+          <div className="mb-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-6 lg:grid-cols-12">
             {visible.map((id, i) => {
               const card = DASH_CARDS.find((c) => c.id === id);
               const w = clampWidth(layout.widths[id] ?? 12);
