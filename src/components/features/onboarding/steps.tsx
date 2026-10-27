@@ -2,7 +2,7 @@
 
 import {
   AudioLines, Briefcase, Car, CheckCheck, Dumbbell, Gift, HeartHandshake,
-  House, Landmark, Lightbulb, Lock, Minus, PartyPopper, Percent, PiggyBank,
+  House, Landmark, Lightbulb, Minus, PartyPopper, Percent, PiggyBank,
   Plus, Receipt, Router, ShieldCheck, ShoppingCart, Smartphone, Sparkles,
   Target, type LucideIcon,
 } from "lucide-react";
@@ -52,8 +52,27 @@ function Tip({ icon: Icon, children }: { icon: LucideIcon; children: React.React
   );
 }
 
+/* The currencies worth offering by name, Morocco first since that
+   is where this is used. Anything else is typed in. */
+const CURRENCIES = [
+  { code: "DH", name: "Moroccan dirham" },
+  { code: "EUR", name: "Euro" },
+  { code: "USD", name: "US dollar" },
+  { code: "GBP", name: "Pound sterling" },
+  { code: "CHF", name: "Swiss franc" },
+  { code: "CAD", name: "Canadian dollar" },
+  { code: "AED", name: "UAE dirham" },
+  { code: "SAR", name: "Saudi riyal" },
+  { code: "EGP", name: "Egyptian pound" },
+  { code: "TND", name: "Tunisian dinar" },
+  { code: "DZD", name: "Algerian dinar" },
+  { code: "TRY", name: "Turkish lira" },
+];
+
 /* ---- 1, welcome ---- */
 export function StepWelcome({ draft, set }: StepProps) {
+  const known = CURRENCIES.some((c) => c.code === draft.currency);
+
   return (
     <>
       <div className="mb-7 text-center">
@@ -68,18 +87,45 @@ export function StepWelcome({ draft, set }: StepProps) {
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="obCurrency">What do you call your money</Label>
-        <Input
-          id="obCurrency" maxLength={6} placeholder="DH"
-          value={draft.currency}
-          onChange={(e) => set({ currency: e.target.value.slice(0, 6) })}
-        />
-      </div>
+      <div className="space-y-2.5">
+        <Label>What do you call your money</Label>
 
-      <Tip icon={Lock}>
-        Everything is saved to your account, so it is on every device you sign in to.
-      </Tip>
+        <div className="flex flex-wrap gap-1.5">
+          {CURRENCIES.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => set({ currency: c.code })}
+              aria-pressed={draft.currency === c.code}
+              title={c.name}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors",
+                draft.currency === c.code
+                  ? "border-transparent bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-fill-2 hover:text-foreground",
+              )}
+            >
+              {c.code}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2.5 pt-1">
+          <span className="text-[12.5px] text-subtle-foreground">
+            Something else
+          </span>
+          <Input
+            maxLength={6}
+            placeholder="Code"
+            aria-label="Your own currency label"
+            className={cn(
+              "h-9 w-[104px] text-center text-[13px] font-semibold",
+              !known && draft.currency ? "border-primary" : undefined,
+            )}
+            value={known ? "" : draft.currency}
+            onChange={(e) => set({ currency: e.target.value.slice(0, 6) })}
+          />
+        </div>
+      </div>
     </>
   );
 }
