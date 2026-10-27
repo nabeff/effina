@@ -54,20 +54,21 @@ padding in `globals.css` keys off.
 `tap()` in the same file is a short haptic, silent anywhere it is
 not available, which includes every browser.
 
-## If a build hangs
+## The first build is slow, and looks stuck
 
-`xcodebuild` can sit in "Resolve Package Graph" indefinitely on a
-clean derived data folder, with no output and no CPU. Resolve the
-packages on their own first, then build:
+`xcodebuild` sits on "Resolve Package Graph" for a long time on a
+clean checkout, printing nothing. It is not hung. Capacitor ships
+its Capacitor and Cordova frameworks as binary xcframework zips,
+and that line is covering the download.
 
-    cd ios/App
-    xcodebuild -project App.xcodeproj -resolvePackageDependencies
-    xcodebuild -project App.xcodeproj -scheme App \
-      -sdk iphonesimulator -configuration Debug \
-      -destination 'generic/platform=iOS Simulator' build
+To watch it rather than guess, resolve the packages on their own
+first, where the progress is visible:
 
-Opening the project in Xcode once also settles it, since Xcode can
-show the prompts the command line cannot.
+    cd ios/App/CapApp-SPM
+    swift package resolve
+
+Then build from `ios/App`. The second build is fast, because the
+artifacts are cached in the derived data folder.
 
 ## Before the App Store
 
