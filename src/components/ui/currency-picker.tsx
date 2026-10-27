@@ -92,8 +92,8 @@ export function CurrencyPicker({
 
       {/* wide enough for the longest name, rather than sized to a
           trigger that only holds three letters */}
-      <PopoverContent align="end" className="w-[320px] p-0">
-        <div className="flex items-center gap-2.5 border-b border-border-soft px-3.5 py-2.5">
+      <PopoverContent align="end" className="w-[320px] overflow-hidden p-0">
+        <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-3">
           <Search className="size-4 flex-none text-subtle-foreground" />
           <input
             autoFocus
