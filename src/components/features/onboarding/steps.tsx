@@ -103,7 +103,7 @@ export function StepIncome({ draft, set }: StepProps) {
       <div className="flex items-stretch gap-2.5">
         <Input
           inputMode="decimal" autoFocus placeholder="0"
-          className="h-[68px] flex-1 text-[34px] font-bold tracking-[-0.03em]"
+          className="h-[56px] flex-1 text-[28px] font-bold tracking-[-0.03em]"
           value={draft.income || ""}
           onChange={(e) => set({ income: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })}
           aria-label="Monthly income"
@@ -115,9 +115,10 @@ export function StepIncome({ draft, set }: StepProps) {
         >
           <SelectTrigger
             aria-label="Currency"
-            /* the primitive sets its height off a data attribute,
-               so that has to be beaten rather than set */
-            className="h-[68px] w-auto min-w-[116px] flex-none gap-2.5 rounded-[var(--radius-md)] border-2 border-primary bg-transparent px-5 text-[18px] font-bold tracking-[-0.02em] text-primary data-[size=default]:h-[68px]"
+            /* a plain border, since a permanently green one reads
+               as focus. The primitive sets its height off a data
+               attribute, so that has to be beaten rather than set. */
+            className="h-[56px] w-auto min-w-[108px] flex-none gap-2.5 rounded-[var(--radius-md)] border-input bg-input/30 px-4 text-[17px] font-bold tracking-[-0.02em] data-[size=default]:h-[56px]"
           >
             <SelectValue placeholder="Currency">
               {(v: unknown) =>
@@ -199,14 +200,14 @@ export function StepBills({ draft, set }: StepProps) {
           draft.bills.map((b, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
-                value={b.name} placeholder="Name" className="h-[52px] text-[15px]"
+                value={b.name} placeholder="Name" className="h-[46px] text-[15px]"
                 onChange={(e) => edit(i, { name: e.target.value })}
                 aria-label={`Bill ${i + 1} name`}
               />
               <div className="relative w-[124px] flex-none">
                 <Input
                   inputMode="decimal" placeholder="0"
-                  className="h-[52px] pr-9 text-right text-[15px]"
+                  className="h-[46px] pr-9 text-right text-[15px]"
                   value={b.amount || ""}
                   onChange={(e) =>
                     edit(i, { amount: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })
@@ -347,7 +348,7 @@ export function StepDebt({ draft, set }: StepProps) {
       <div className="space-y-1.5">
         <Label htmlFor="obDebtName">Who</Label>
         <Input
-          id="obDebtName" placeholder="Dad" className="h-[52px] text-[15px]"
+          id="obDebtName" placeholder="Dad" className="h-[46px] text-[15px]"
           value={draft.debtName}
           onChange={(e) => set({ debtName: e.target.value })}
         />
@@ -356,7 +357,7 @@ export function StepDebt({ draft, set }: StepProps) {
         <div className="space-y-1.5">
           <Label htmlFor="obDebtTotal">Total you owe</Label>
           <Input
-            id="obDebtTotal" inputMode="decimal" placeholder="0" className="h-[52px] text-[15px]"
+            id="obDebtTotal" inputMode="decimal" placeholder="0" className="h-[46px] text-[15px]"
             value={draft.debtTotal || ""}
             onChange={(e) => set({ debtTotal: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })}
           />
@@ -364,7 +365,7 @@ export function StepDebt({ draft, set }: StepProps) {
         <div className="space-y-1.5">
           <Label htmlFor="obDebtPaid">Already paid</Label>
           <Input
-            id="obDebtPaid" inputMode="decimal" placeholder="0" className="h-[52px] text-[15px]"
+            id="obDebtPaid" inputMode="decimal" placeholder="0" className="h-[46px] text-[15px]"
             value={draft.debtPaid || ""}
             onChange={(e) => set({ debtPaid: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })}
           />
@@ -390,7 +391,7 @@ export function StepGoal({ draft, set }: StepProps) {
       <div className="space-y-1.5">
         <Label htmlFor="obGoalName">What is it</Label>
         <Input
-          id="obGoalName" placeholder="A laptop, a trip, a ring" className="h-[52px] text-[15px]"
+          id="obGoalName" placeholder="A laptop, a trip, a ring" className="h-[46px] text-[15px]"
           value={draft.goalName}
           onChange={(e) => set({ goalName: e.target.value })}
         />
@@ -400,7 +401,7 @@ export function StepGoal({ draft, set }: StepProps) {
         <div className="relative">
           <Input
             id="obGoalPrice" inputMode="decimal" placeholder="0"
-            className="h-[52px] pr-10 text-[15px]"
+            className="h-[46px] pr-10 text-[15px]"
             value={draft.goalPrice || ""}
             onChange={(e) => set({ goalPrice: Math.max(0, Number(e.target.value.replace(/[^\d.]/g, "")) || 0) })}
           />
