@@ -100,6 +100,7 @@ export interface Settings {
   glow: string;
   layoutOrder: string[];
   layoutWidths: Record<string, number>;
+  layoutHidden: string[];
   onboarded: boolean;
   tourDone: boolean;
 }

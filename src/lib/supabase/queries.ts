@@ -101,6 +101,7 @@ function toSettings(r: Row | null): Settings {
     glow: String(r?.glow ?? "green"),
     layoutOrder: (r?.layout_order as string[]) ?? [],
     layoutWidths: (r?.layout_widths as Record<string, number>) ?? {},
+    layoutHidden: (r?.layout_hidden as string[]) ?? [],
     onboarded: !!r?.onboarded,
     tourDone: !!r?.tour_done,
   };

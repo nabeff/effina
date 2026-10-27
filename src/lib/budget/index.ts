@@ -16,3 +16,5 @@ export * from "./rebalance";
 export * from "./notices";
 export * from "./onboarding";
 export * from "./dashboard";
+export * from "./layout";
+export * from "./trends";

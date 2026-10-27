@@ -89,7 +89,7 @@ export function seedBudget(now = new Date(2026, 9, 26)): BudgetData {
       taxRate: 10, taxPaid: {}, debtTotal: 15000, debtPaidBefore: 0,
       doneMonths: {}, accent: "green", motion: "full", glass: "medium",
       background: "glow", radius: "round", density: "comfy",
-      theme: "dark", glow: "green", layoutOrder: [], layoutWidths: {},
+      theme: "dark", glow: "green", layoutOrder: [], layoutWidths: {}, layoutHidden: [],
       onboarded: true, tourDone: true,
     },
     bills, envelopes, transactions,

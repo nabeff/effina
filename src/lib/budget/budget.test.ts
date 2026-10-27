@@ -18,6 +18,8 @@ import {
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
   makeHundred, recommendedSplit,
   dayStrip, nextWin, goalDone,
+  readLayout, moveCard, nextWidth, isDefault, DASH_CARDS, WIDTHS, reorder,
+  cashFlow, savingsRate, spendByCategory, insights, lastMonth, upcomingBills,
 } from "./index";
 import type { Envelope, EnvelopeRow } from "@/types/budget";
 
@@ -533,5 +535,203 @@ describe("nextWin", () => {
       settings: { ...data.settings, debtTotal: 0 },
     };
     expect(nextWin(clear, MONTH, NOW)).toBeNull();
+  });
+});
+
+/* ---- the home page layout ---- */
+describe("readLayout", () => {
+  it("gives every card its default place when nothing is saved", () => {
+    const l = readLayout(undefined, undefined);
+    expect(l.order).toEqual(DASH_CARDS.map((c) => c.id));
+    expect(isDefault(l)).toBe(true);
+  });
+
+  it("keeps a card that a saved layout never mentioned", () => {
+    /* an old layout from before the ring existed */
+    const old = DASH_CARDS.map((c) => c.id).filter((id) => id !== "ring");
+    const l = readLayout(old, {});
+    expect(l.order).toContain("ring");
+    expect(l.order).toHaveLength(DASH_CARDS.length);
+  });
+
+  it("puts a new card near its default position, not on the end", () => {
+    const old = DASH_CARDS.map((c) => c.id).filter((id) => id !== "win");
+    const l = readLayout(old, {});
+    expect(l.order.indexOf("win")).toBeLessThan(l.order.length - 1);
+  });
+
+  it("drops a card that no longer exists", () => {
+    const l = readLayout(["hero", "ghost", "split"], {});
+    expect(l.order).not.toContain("ghost");
+  });
+
+  it("keeps a saved order and saved widths", () => {
+    const order = ["ring", ...DASH_CARDS.map((c) => c.id).filter((id) => id !== "ring")];
+    const l = readLayout(order, { ring: 6 });
+    expect(l.order[0]).toBe("ring");
+    expect(l.widths.ring).toBe(6);
+    expect(isDefault(l)).toBe(false);
+  });
+
+  it("snaps a stored width that is not an allowed step", () => {
+    const l = readLayout(undefined, { hero: 7 });
+    expect(WIDTHS).toContain(l.widths.hero);
+  });
+
+  it("starts the optional cards switched off, once", () => {
+    const fresh = readLayout(undefined, undefined, undefined);
+    for (const c of DASH_CARDS.filter((c) => c.optional)) {
+      expect(fresh.hidden).toContain(c.id);
+    }
+    expect(isDefault(fresh)).toBe(true);
+  });
+
+  it("respects a saved empty hidden list rather than switching them off again", () => {
+    const all = readLayout(DASH_CARDS.map((c) => c.id), {}, []);
+    expect(all.hidden).toEqual([]);
+  });
+
+  it("drops a hidden id that no longer exists", () => {
+    const l = readLayout(undefined, undefined, ["ghost", "trio"]);
+    expect(l.hidden).toEqual(["trio"]);
+  });
+});
+
+describe("moveCard", () => {
+  const order = ["a", "b", "c", "d"];
+
+  it("moves a card by one in each direction", () => {
+    expect(moveCard(order, "c", -1)).toEqual(["a", "c", "b", "d"]);
+    expect(moveCard(order, "b", 1)).toEqual(["a", "c", "b", "d"]);
+  });
+
+  it("will not move past either end", () => {
+    expect(moveCard(order, "a", -1)).toEqual(order);
+    expect(moveCard(order, "d", 1)).toEqual(order);
+  });
+
+  it("leaves an unknown card alone", () => {
+    expect(moveCard(order, "zz", 1)).toEqual(order);
+  });
+});
+
+describe("nextWidth", () => {
+  it("cycles through every allowed step and comes back", () => {
+    const seen: number[] = [];
+    let w: number = WIDTHS[0];
+    for (let i = 0; i < WIDTHS.length; i++) {
+      seen.push(w);
+      w = nextWidth(w);
+    }
+    expect(new Set(seen).size).toBe(WIDTHS.length);
+    expect(w).toBe(WIDTHS[0]);
+  });
+});
+
+/* ---- trends ----
+   Every one of these must return null or an empty list rather
+   than a made up number when the history is too thin. */
+describe("trends", () => {
+  const data = seedBudget(NOW);
+
+  it("cash flow covers the months asked for, newest last", () => {
+    const flow = cashFlow(data, 6, NOW);
+    expect(flow).toHaveLength(6);
+    expect(flow[5].month).toBe(MONTH);
+    expect(flow[0].month).toBe(shiftMonth(MONTH, -5));
+  });
+
+  it("cash flow uses the filed totals for a closed month", () => {
+    const flow = cashFlow(data, 6, NOW);
+    for (const c of data.closedMonths) {
+      const point = flow.find((f) => f.month === c.month);
+      if (point) {
+        expect(point.income).toBe(c.income);
+        expect(point.out).toBe(c.spent);
+      }
+    }
+  });
+
+  it("savings rate is a share of income, or null without income", () => {
+    const rate = savingsRate(data, MONTH, NOW);
+    expect(rate).not.toBeNull();
+    expect(rate!).toBeGreaterThan(0);
+    expect(rate!).toBeLessThanOrEqual(100);
+
+    const broke = { ...data, transactions: [], closedMonths: [] };
+    expect(savingsRate(broke, MONTH, NOW)).toBeNull();
+  });
+
+  it("category spending sums to 100 percent and is sorted", () => {
+    const cats = spendByCategory(data, MONTH, NOW);
+    expect(cats.length).toBeGreaterThan(0);
+    expect(cats.reduce((a, c) => a + c.pct, 0)).toBeCloseTo(100, 4);
+    for (let i = 1; i < cats.length; i++) {
+      expect(cats[i - 1].spent).toBeGreaterThanOrEqual(cats[i].spent);
+    }
+  });
+
+  it("category spending is empty when nothing was spent", () => {
+    const quiet = { ...data, transactions: [] };
+    expect(spendByCategory(quiet, MONTH, NOW)).toEqual([]);
+  });
+
+  it("insights never invent a comparison out of one data point", () => {
+    const bare = { ...data, transactions: [], closedMonths: [] };
+    expect(insights(bare, MONTH, NOW)).toEqual([]);
+  });
+
+  it("last month is null when there is no previous month at all", () => {
+    const fresh = { ...data, transactions: [], closedMonths: [] };
+    expect(lastMonth(fresh, MONTH, NOW)).toBeNull();
+  });
+
+  it("last month reads the filed totals when it was closed", () => {
+    const prev = shiftMonth(MONTH, -1);
+    const closed = data.closedMonths.find((c) => c.month === prev);
+    const got = lastMonth(data, MONTH, NOW);
+    if (closed) {
+      expect(got).toEqual({
+        income: closed.income, spent: closed.spent, saved: closed.saved,
+      });
+    }
+  });
+
+  it("upcoming bills are unpaid, soon, and soonest first", () => {
+    const bills = upcomingBills(data, MONTH, 14, NOW);
+    for (const b of bills) {
+      expect(b.paid).toBe(false);
+      expect(b.inDays).toBeLessThanOrEqual(14);
+    }
+    for (let i = 1; i < bills.length; i++) {
+      expect(bills[i - 1].inDays).toBeLessThanOrEqual(bills[i].inDays);
+    }
+  });
+});
+
+describe("reorder", () => {
+  const order = ["a", "b", "c", "d"];
+
+  it("drops a card onto the position of another", () => {
+    expect(reorder(order, "d", "a")).toEqual(["d", "a", "b", "c"]);
+    expect(reorder(order, "a", "c")).toEqual(["b", "c", "a", "d"]);
+  });
+
+  it("leaves the order alone for an unknown or identical card", () => {
+    expect(reorder(order, "zz", "a")).toEqual(order);
+    expect(reorder(order, "b", "b")).toEqual(order);
+  });
+});
+
+describe("the card list itself", () => {
+  it("declares every width as an allowed step", () => {
+    for (const c of DASH_CARDS) {
+      expect(WIDTHS).toContain(c.width);
+    }
+  });
+
+  it("has no duplicate ids", () => {
+    const ids = DASH_CARDS.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

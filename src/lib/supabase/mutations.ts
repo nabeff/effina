@@ -109,6 +109,7 @@ export async function updateSettings(
     glass: "glass", background: "background", radius: "radius",
     density: "density", theme: "theme", glow: "glow",
     layoutOrder: "layout_order", layoutWidths: "layout_widths",
+    layoutHidden: "layout_hidden",
     onboarded: "onboarded", tourDone: "tour_done",
   };
 
