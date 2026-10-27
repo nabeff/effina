@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MORE_TABS, TABS } from "@/lib/nav";
 
@@ -13,6 +15,8 @@ export function MoreSheet({
   onOpenChange: (v: boolean) => void;
   overCount?: number;
 }) {
+  const router = useRouter();
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-[20px]">
@@ -42,6 +46,19 @@ export function MoreSheet({
               </Link>
             );
           })}
+
+          <button
+            onClick={async () => {
+              onOpenChange(false);
+              await createClient().auth.signOut();
+              router.push("/sign-in");
+              router.refresh();
+            }}
+            className="flex items-center gap-3 border-t border-border-soft px-5 py-3 text-left text-destructive active:bg-destructive/10"
+          >
+            <LogOut className="size-[21px]" />
+            <span className="flex-1 text-[15px] font-medium">Sign out</span>
+          </button>
         </div>
       </SheetContent>
     </Sheet>
