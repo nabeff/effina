@@ -7,7 +7,7 @@ import { Mark } from "@/components/ui/mark";
    used to start at full width, so the first frame of the screen
    was the whole mark at once before it closed, which read as a
    flash. */
-const RADIUS = 95;
+const RADIUS = 72;
 const START_RADIUS = 0;
 
 /**
@@ -82,7 +82,7 @@ export function Spotlight() {
       >
         {/* soft and a touch smaller, so it reads as a ground
             rather than a graphic sitting behind the words */}
-        <Mark className="h-[min(74vh,74vw)] w-[min(74vh,74vw)] text-primary opacity-[0.14] blur-[1.5px]" />
+        <Mark className="h-[min(74vh,74vw,860px)] w-[min(74vh,74vw,860px)] text-primary opacity-[0.14] blur-[1.5px]" />
       </div>
     </>
   );
