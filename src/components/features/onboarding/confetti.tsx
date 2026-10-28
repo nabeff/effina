@@ -37,7 +37,7 @@ export function Confetti({ run }: { run: boolean }) {
   if (!run) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 grid place-items-center">
+    <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center overflow-visible">
       {/* one ring, opening out of where the mark is */}
       {[0, 1].map((i) => (
         <motion.span

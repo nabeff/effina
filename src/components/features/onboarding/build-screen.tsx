@@ -78,9 +78,7 @@ export function BuildScreen({
   const landed = Math.floor(done * BLOCKS.length);
 
   return (
-    <div className="relative flex flex-col items-center py-4 text-center">
-      <Confetti run={sealed && !failed} />
-
+    <div className="flex flex-col items-center py-4 text-center">
       <motion.div
         className="relative mb-8 size-[132px]"
         animate={sealed ? { scale: [1, 1.07, 1] } : { scale: 1 }}
@@ -94,8 +92,7 @@ export function BuildScreen({
             <rect
               key={`ghost-${i}`}
               x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
-              fill={`var(--hue-${b.hue})`}
-              opacity={0.1}
+              fill="var(--fill-2)"
             />
           ))}
 
@@ -119,6 +116,9 @@ export function BuildScreen({
           )}
         </svg>
 
+        {/* the burst belongs around the mark, which is where
+            the eye already is */}
+        <Confetti run={sealed && !failed} />
       </motion.div>
 
       <h2 className="text-[22px] leading-tight font-bold tracking-[-0.028em]">
@@ -139,7 +139,7 @@ export function BuildScreen({
       {sealed && !failed ? (
         <Summary draft={draft} onDone={onDone} />
       ) : (
-        <div className="mt-7 flex w-full max-w-[320px] flex-col gap-2.5 text-left">
+        <div className="mt-7 flex w-full max-w-[280px] flex-col items-start gap-2.5">
           {jobs.map((j, i) => {
             const ticked = i < at;
             const current = i === at && !failed && !sealed;
