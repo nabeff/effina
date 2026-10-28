@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DividingStream } from "@/components/features/onboarding/dividing-stream";
+import { DividingRadar } from "@/components/features/onboarding/dividing-radar";
 import { DividingRing } from "@/components/features/onboarding/dividing-ring";
 import { DividingCoins } from "@/components/features/onboarding/dividing-coins";
 import { Dividing } from "@/components/features/onboarding/dividing";
@@ -19,6 +20,7 @@ import type { Draft } from "@/lib/budget";
  */
 
 const OPTIONS = [
+  { id: "radar", name: "The shape", note: "One arm per area, like a player's attributes" },
   { id: "stream", name: "One, the stream", note: "The month is one bar that comes apart" },
   { id: "ring", name: "Two, the ring", note: "The dashboard ring draws itself" },
   { id: "coins", name: "Three, the coins", note: "Coins fall and stack in glass jars" },
@@ -27,7 +29,7 @@ const OPTIONS = [
 
 export default function PickAnimation() {
   const [income, setIncome] = useState(22000);
-  const [which, setWhich] = useState("stream");
+  const [which, setWhich] = useState("radar");
   const [run, setRun] = useState(0);
 
   const draft: Draft = {
@@ -87,7 +89,9 @@ export default function PickAnimation() {
       </div>
 
       <div className="mt-6 min-h-[460px] rounded-[var(--radius-lg)] border border-border-soft bg-black px-4 py-6">
-        {which === "stream" ? (
+        {which === "radar" ? (
+          <DividingRadar key={`d${run}`} draft={draft} onDone={() => {}} />
+        ) : which === "stream" ? (
           <DividingStream key={`s${run}`} draft={draft} onDone={() => {}} />
         ) : which === "ring" ? (
           <DividingRing key={`r${run}`} draft={draft} onDone={() => {}} />
