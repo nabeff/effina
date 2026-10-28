@@ -47,7 +47,7 @@ export function OnboardingGate() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
         >
-          <Mark className="size-[72px] text-subtle-foreground" />
+          <Mark className="size-[72px]" colour />
         </motion.div>
       </div>
     );

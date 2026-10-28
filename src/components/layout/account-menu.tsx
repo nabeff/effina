@@ -64,7 +64,7 @@ export function AccountMenu() {
             ) : (
               /* the mark until we know who is signed in, rather
                  than two letters that might be wrong */
-              <Mark className="size-[56%]" />
+              <Mark className="size-[56%]" colour />
             )}
           </button>
         }

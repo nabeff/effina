@@ -1,19 +1,21 @@
 import type { LucideIcon } from "lucide-react";
+import type React from "react";
 import {
-  LayoutGrid, ReceiptText, WalletCards, Target, FileText,
+  ReceiptText, WalletCards, Target, FileText,
   ArrowLeftRight, Percent, History, Lightbulb, Settings2,
 } from "lucide-react";
+import { MarkIcon } from "@/components/ui/mark";
 
 export interface Tab {
   id: string;
   href: string;
   name: string;
   short: string;
-  icon: LucideIcon;
+  icon: LucideIcon | ((p: { className?: string }) => React.ReactNode);
 }
 
 export const TABS: Tab[] = [
-  { id: "dash",   href: "/",           name: "Dashboard", short: "Home",     icon: LayoutGrid },
+  { id: "dash",   href: "/",           name: "Dashboard", short: "Home",     icon: MarkIcon },
   { id: "log",    href: "/log",        name: "Money log", short: "Log",      icon: ReceiptText },
   { id: "bills",  href: "/bills",      name: "Bills",     short: "Bills",    icon: FileText },
   { id: "env",    href: "/envelopes",  name: "Envelopes", short: "Wallet",   icon: WalletCards },

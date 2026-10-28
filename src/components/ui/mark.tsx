@@ -49,6 +49,31 @@ export function Mark({
   );
 }
 
+/**
+ * The mark shaped like a lucide icon, so it can stand in for one.
+ *
+ * Home is the dashboard, and the dashboard is the whole picture
+ * of a month, which is what the mark already means. A generic
+ * four square grid icon said the same thing less well.
+ */
+export function MarkIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className={cn("block", className)}
+      aria-hidden
+    >
+      {MARK_BLOCKS.map((b, i) => (
+        <rect
+          key={i}
+          x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
+          fill="currentColor"
+        />
+      ))}
+    </svg>
+  );
+}
+
 /** The mark in a circle, for the rail and the wizard header. */
 export function MarkBadge({
   className, colour = true,

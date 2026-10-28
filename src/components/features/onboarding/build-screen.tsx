@@ -58,7 +58,7 @@ export function BuildScreen({
         if (!alive) return;
         setAt(i + 1);
         /* a beat between ticks, so the list reads rather than flashes */
-        await new Promise((r) => setTimeout(r, 220));
+        await new Promise((r) => setTimeout(r, 420));
         if (!alive) return;
       }
 
@@ -82,7 +82,7 @@ export function BuildScreen({
       <motion.div
         className="relative mb-8 size-[132px]"
         animate={sealed ? { scale: [1, 1.07, 1] } : { scale: 1 }}
-        transition={{ duration: 0.8, ease: EASE, times: [0, 0.35, 1] }}
+        transition={{ duration: 1.2, ease: EASE, times: [0, 0.35, 1] }}
       >
         <svg viewBox="0 0 64 64" className="size-full">
           {/* where each block is going, held very faintly so the
@@ -107,9 +107,9 @@ export function BuildScreen({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{
-                  duration: 0.5,
+                  duration: 0.8,
                   ease: [0.22, 0.9, 0.24, 1],
-                  delay: sealed ? i * 0.07 : 0,
+                  delay: sealed ? i * 0.14 : 0,
                 }}
               />
             ) : null,
@@ -211,7 +211,7 @@ function Summary({ draft, onDone }: { draft: Draft; onDone: () => void }) {
         className="flex flex-col divide-y divide-border-soft rounded-[var(--radius-md)] bg-fill-2 px-4"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1], delay: 0.25 }}
+        transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1], delay: 0.6 }}
       >
         {rows.map(([label, value], i) => (
           <motion.div
@@ -219,7 +219,7 @@ function Summary({ draft, onDone }: { draft: Draft; onDone: () => void }) {
             className="flex items-center justify-between py-2.5 text-[13.5px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.4 + i * 0.07 }}
+            transition={{ duration: 0.55, delay: 0.85 + i * 0.13 }}
           >
             <span className="text-muted-foreground">{label}</span>
             <span className="font-semibold tabular">{value}</span>
@@ -230,7 +230,7 @@ function Summary({ draft, onDone }: { draft: Draft; onDone: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 + rows.length * 0.07 }}
+        transition={{ duration: 0.6, delay: 0.95 + rows.length * 0.13 }}
       >
         <Button size="lg" onClick={onDone} className="mt-5 w-full">
           Open my dashboard

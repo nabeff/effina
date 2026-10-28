@@ -46,9 +46,9 @@ export function Confetti({ run }: { run: boolean }) {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: [0.5, 2.6], opacity: [0.7, 0] }}
           transition={{
-            duration: 1.25,
+            duration: 1.9,
             ease: [0.16, 0.9, 0.3, 1],
-            delay: i * 0.18,
+            delay: i * 0.26,
           }}
         />
       ))}
@@ -71,9 +71,9 @@ export function Confetti({ run }: { run: boolean }) {
             scale: [0.3, 1, 0.7],
           }}
           transition={{
-            duration: 1.5,
+            duration: 2.3,
             ease: EASE,
-            delay: 0.1 + m.d,
+            delay: 0.15 + m.d * 1.6,
             times: [0, 0.4, 1],
           }}
         />

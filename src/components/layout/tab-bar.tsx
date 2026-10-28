@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, WalletCards, Target, Plus, Ellipsis } from "lucide-react";
+import { WalletCards, Target, Plus, Ellipsis } from "lucide-react";
+import { MarkIcon } from "@/components/ui/mark";
 import { cn } from "@/lib/utils";
 import { MORE_TABS, TABS } from "@/lib/nav";
 
@@ -34,7 +35,7 @@ export function TabBar({
       aria-label="Sections"
     >
       <Link href="/" className={item(path === "/")}>
-        <LayoutGrid className="size-[21px]" /> Home
+        <MarkIcon className="size-[21px]" /> Home
       </Link>
 
       <button onClick={onAdd} className={cn(item(false), "text-primary")} aria-label="Add">
