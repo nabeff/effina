@@ -160,7 +160,11 @@ export default function DashboardPage() {
   /* an account with no income, no bills and no envelopes has
      never been set up, whatever the onboarded flag says */
   const empty =
-    st.income <= 0 && !data.bills.length && !data.envelopes.length;
+    st.income <= 0 &&
+    !data.bills.length &&
+    /* envelopes that all sit at zero are not a budget either,
+       so an account full of them still counts as empty */
+    !data.envelopes.some((e) => e.pct > 0);
 
   const saved = readLayout(
     data.settings.layoutOrder,

@@ -89,6 +89,10 @@ export function Wizard({
       {
         label: "Building your envelopes",
         run: async () => {
+          /* somebody who answered nothing gets nothing, not a
+             budget of zeros. An empty account can offer to set
+             itself up again, a zeroed one looks broken. */
+          if (draft.income <= 0 && !draft.picks.length) return;
           const userId = await uid();
           for (let i = 0; i < draft.split.length; i++) {
             const e = draft.split[i];

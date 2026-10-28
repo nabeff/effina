@@ -13,6 +13,15 @@ import { cn } from "@/lib/utils";
  * centre and read as a pinwheel, which is not a thing a brand
  * can risk.
  */
+/** The mark's rectangles, so anything that draws it draws the
+    same shape. */
+export const MARK_BLOCKS = [
+  { x: 6, y: 6, w: 33, h: 26 },
+  { x: 43, y: 6, w: 15, h: 26 },
+  { x: 6, y: 36, w: 15, h: 22 },
+  { x: 25, y: 36, w: 33, h: 22 },
+];
+
 export function Mark({ className }: { className?: string }) {
   return (
     <svg
@@ -21,11 +30,14 @@ export function Mark({ className }: { className?: string }) {
       role="img"
       aria-label="Mazaj"
     >
-      {/* the big one, top left, the way a split falls */}
-      <rect x="6" y="6" width="33" height="26" rx="3" fill="currentColor" />
-      <rect x="43" y="6" width="15" height="26" rx="3" fill="currentColor" />
-      <rect x="6" y="36" width="15" height="22" rx="3" fill="currentColor" />
-      <rect x="25" y="36" width="33" height="22" rx="3" fill="currentColor" />
+      {/* the big one first, top left, the way a split falls */}
+      {MARK_BLOCKS.map((b, i) => (
+        <rect
+          key={i}
+          x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
+          fill="currentColor"
+        />
+      ))}
     </svg>
   );
 }

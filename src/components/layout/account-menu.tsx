@@ -70,16 +70,21 @@ export function AccountMenu() {
         }
       />
 
-      <PopoverContent align="start" side="right" className="w-[230px] p-0">
-        <div className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-          <span className="grid size-9 flex-none place-items-center overflow-hidden rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
+      <PopoverContent
+        align="start"
+        side="right"
+        sideOffset={10}
+        className="w-[248px] overflow-hidden rounded-[var(--radius-lg)] p-1.5"
+      >
+        <div className="flex items-center gap-3 px-2.5 py-2.5">
+          <span className="grid size-10 flex-none place-items-center overflow-hidden rounded-full bg-primary text-[12.5px] font-bold text-primary-foreground">
             {photo ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={photo}
                 alt=""
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 referrerPolicy="no-referrer"
                 onError={() => setBrokenPhoto(true)}
                 className="size-full object-cover"
@@ -89,30 +94,32 @@ export function AccountMenu() {
             )}
           </span>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 truncate text-[13.5px] font-semibold">
+            <div className="truncate text-[13.5px] font-semibold tracking-[-0.01em]">
               {profile?.name || "Your account"}
             </div>
-            <div className="mt-0.5 truncate text-[12px] text-muted-foreground">
+            <div className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
               {profile?.email || "Signed in"}
             </div>
           </div>
         </div>
 
+        <div className="mx-1 my-1 h-px bg-border-soft" />
+
         <Link
           href="/setup"
           onClick={() => setOpen(false)}
-          className="flex items-center gap-2.5 px-4 py-2.5 text-[13.5px] transition-colors hover:bg-fill-2"
+          className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-[13.5px] transition-colors outline-none hover:bg-fill-2 focus-visible:bg-fill-2"
         >
-          <Settings2 className="size-4 text-muted-foreground" />
+          <Settings2 className="size-[17px] text-muted-foreground" />
           Setup
         </Link>
 
         <button
           onClick={signOut}
           disabled={busy}
-          className="flex w-full items-center gap-2.5 border-t border-border-soft px-4 py-2.5 text-left text-[13.5px] text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+          className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-left text-[13.5px] text-destructive transition-colors outline-none hover:bg-destructive/10 focus-visible:bg-destructive/10 disabled:opacity-50"
         >
-          <LogOut className="size-4" />
+          <LogOut className="size-[17px]" />
           {busy ? "Signing out" : "Sign out"}
         </button>
       </PopoverContent>

@@ -4,19 +4,17 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MARK_BLOCKS } from "@/components/ui/mark";
 
 export interface Job {
   label: string;
   run: () => Promise<void>;
 }
 
-/* the four blocks of the mark, in the order they land */
-const BLOCKS = [
-  { x: 6, y: 6, w: 33, h: 26 },
-  { x: 43, y: 6, w: 15, h: 26 },
-  { x: 6, y: 36, w: 15, h: 22 },
-  { x: 25, y: 36, w: 33, h: 22 },
-];
+/* the blocks of the mark, in the order they land. These are the
+   mark's own rectangles, so the shape that assembles here is the
+   logo rather than something close to it. */
+const BLOCKS = MARK_BLOCKS;
 
 /**
  * The finish.
