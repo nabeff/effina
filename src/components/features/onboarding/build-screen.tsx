@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Confetti } from "./confetti";
 import { draftBillTotal, draftFlex, type Draft } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
 import { MARK_BLOCKS } from "@/components/ui/mark";
+
+const EASE = [0.32, 0.72, 0, 1] as const;
 
 export interface Job {
   label: string;
@@ -79,7 +81,11 @@ export function BuildScreen({
     <div className="relative flex flex-col items-center py-4 text-center">
       <Confetti run={sealed && !failed} />
 
-      <div className="relative mb-8 size-[132px]">
+      <motion.div
+        className="relative mb-8 size-[132px]"
+        animate={sealed ? { scale: [1, 1.07, 1] } : { scale: 1 }}
+        transition={{ duration: 0.8, ease: EASE, times: [0, 0.35, 1] }}
+      >
         <svg viewBox="0 0 64 64" className="size-full">
           {/* where each block is going, so the shape is readable
               before it is finished */}
@@ -95,6 +101,8 @@ export function BuildScreen({
             />
           ))}
 
+          {/* each block arrives from the edge it belongs to, so
+              the mark assembles rather than flashing into place */}
           {BLOCKS.map((b, i) =>
             i < landed || sealed ? (
               <motion.rect
@@ -102,30 +110,23 @@ export function BuildScreen({
                 x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
                 fill="currentColor"
                 className="text-primary"
-                initial={{ opacity: 0, scale: 0.72 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  type: "spring", stiffness: 420, damping: 26,
-                  delay: sealed ? i * 0.06 : 0,
+                initial={{
+                  opacity: 0,
+                  x: b.x < 32 ? -14 : 14,
+                  y: b.y < 32 ? -14 : 14,
                 }}
-                style={{ transformOrigin: `${b.x + b.w / 2}px ${b.y + b.h / 2}px` }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{
+                  duration: 0.62,
+                  ease: [0.22, 0.9, 0.24, 1],
+                  delay: sealed ? i * 0.07 : 0,
+                }}
               />
             ) : null,
           )}
         </svg>
 
-        {/* one pulse when the shape is whole */}
-        <AnimatePresence>
-          {sealed ? (
-            <motion.div
-              initial={{ opacity: 0.5, scale: 0.9 }}
-              animate={{ opacity: 0, scale: 1.45 }}
-              transition={{ duration: 0.9, ease: [0.25, 0.8, 0.3, 1] }}
-              className="pointer-events-none absolute inset-0 rounded-[26%] bg-primary/25 blur-xl"
-            />
-          ) : null}
-        </AnimatePresence>
-      </div>
+      </motion.div>
 
       <h2 className="text-[22px] leading-tight font-bold tracking-[-0.028em]">
         {failed
