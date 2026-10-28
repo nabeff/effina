@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { BUDGET_KEY } from "@/lib/hooks/use-budget";
 import {
-  updateSettings, upsertBill, upsertEnvelope, upsertGoal,
+  pruneEnvelopes, updateSettings, upsertBill, upsertEnvelope, upsertGoal,
 } from "@/lib/supabase/mutations";
 import { emptyDraft, type Draft } from "@/lib/budget";
 import { useResumable } from "@/lib/hooks/use-resumable";
@@ -106,6 +106,18 @@ export function Wizard({
               icon: e.icon, hue: e.hue, position: i,
             });
           }
+
+          /* anything left over from an earlier run is not part
+             of the budget the person just described */
+          await pruneEnvelopes(
+            supabase,
+            userId,
+            draft.split.map((e) =>
+              e.kind === "debt" && draft.debtName.trim()
+                ? `${draft.debtName.trim()} debt`
+                : e.name,
+            ),
+          );
         },
       },
       {

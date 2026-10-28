@@ -126,11 +126,27 @@ export default function DashboardPage() {
   if (!mounted || isLoading || !data || !st) {
     return (
       <div className="space-y-8">
-        <Skeleton className="h-[56px] w-[280px] rounded-[var(--radius-md)]" />
+        {/* the greeting */}
+        <div className="flex items-end justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-[30px] w-[220px] rounded-[var(--radius-sm)]" />
+            <Skeleton className="h-[15px] w-[150px] rounded-[var(--radius-sm)]" />
+          </div>
+          <Skeleton className="h-[34px] w-[90px] rounded-[var(--radius-sm)]" />
+        </div>
+
+        {/* the pace card across the top */}
         <Skeleton className="h-[200px] rounded-[var(--radius)]" />
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Skeleton className="h-[180px] rounded-[var(--radius)]" />
-          <Skeleton className="h-[180px] rounded-[var(--radius)]" />
+
+        {/* the widget grid, in the same shape the cards land in */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-6 lg:grid-cols-12">
+          <Skeleton className="h-[260px] rounded-[var(--radius)] sm:col-span-6 lg:col-span-7" />
+          <Skeleton className="h-[260px] rounded-[var(--radius)] sm:col-span-6 lg:col-span-5" />
+          <Skeleton className="h-[120px] rounded-[var(--radius)] sm:col-span-2 lg:col-span-4" />
+          <Skeleton className="h-[120px] rounded-[var(--radius)] sm:col-span-2 lg:col-span-4" />
+          <Skeleton className="h-[120px] rounded-[var(--radius)] sm:col-span-2 lg:col-span-4" />
+          <Skeleton className="h-[220px] rounded-[var(--radius)] sm:col-span-3 lg:col-span-6" />
+          <Skeleton className="h-[220px] rounded-[var(--radius)] sm:col-span-3 lg:col-span-6" />
         </div>
       </div>
     );
@@ -157,10 +173,15 @@ export default function DashboardPage() {
       : data.settings.debtTotal
     : 0;
 
-  /* an account with no income, no bills and no envelopes has
-     never been set up, whatever the onboarded flag says */
+  /* An account with no income, no bills and no envelopes has
+     never been set up, whatever the onboarded flag says.
+
+     This asks what the person told us they earn, not what has
+     landed this month. A new account in week one has a salary
+     on record and nothing received yet, and that is a filled
+     budget rather than an empty one. */
   const empty =
-    st.income <= 0 &&
+    (data.settings.income ?? 0) <= 0 &&
     !data.bills.length &&
     /* envelopes that all sit at zero are not a budget either,
        so an account full of them still counts as empty */

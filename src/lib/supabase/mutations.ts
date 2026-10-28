@@ -168,6 +168,28 @@ export async function upsertEnvelope(
   return data;
 }
 
+/**
+ * Removes the envelopes setup did not just write.
+ *
+ * Running setup again is a person saying this is my budget now,
+ * so an envelope they did not pick this time should not survive
+ * from the last attempt. Names are what setup addresses an
+ * envelope by, so names are what decides.
+ */
+export async function pruneEnvelopes(
+  supabase: SupabaseClient,
+  userId: string,
+  keep: string[],
+) {
+  const query = supabase.from("envelopes").delete().eq("user_id", userId);
+  /* an empty keep list means remove them all, and postgrest
+     needs a value rather than an empty "in" clause */
+  const { error } = keep.length
+    ? await query.not("name", "in", `(${keep.map((n) => `"${n}"`).join(",")})`)
+    : await query;
+  if (error) throw error;
+}
+
 export async function upsertGoal(
   supabase: SupabaseClient,
   userId: string,

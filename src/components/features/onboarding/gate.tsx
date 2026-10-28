@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Mark } from "@/components/ui/mark";
 import { useQueryClient } from "@tanstack/react-query";
 import { Wizard } from "./wizard";
 import { Tour } from "./tour";
@@ -17,7 +19,7 @@ import { updateSettings } from "@/lib/supabase/mutations";
  * was already there would be alarming.
  */
 export function OnboardingGate() {
-  const { data } = useBudget();
+  const { data, isLoading } = useBudget();
   const client = useQueryClient();
 
   /* closing is local, so the sheet goes away at once rather than
@@ -25,7 +27,24 @@ export function OnboardingGate() {
   const [doneSetup, setDoneSetup] = useState(false);
   const [doneTour, setDoneTour] = useState(false);
 
-  if (!data) return null;
+  /* Until the budget has loaded, nobody knows whether setup is
+     owed. Returning nothing lets the dashboard paint its
+     skeleton first, so a new account sees a flash of an empty
+     dashboard before the wizard covers it. A plain hold keeps
+     the first screen honest. */
+  if (isLoading || !data) {
+    return (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+        >
+          <Mark className="size-[72px] text-subtle-foreground" />
+        </motion.div>
+      </div>
+    );
+  }
 
   const needsSetup = !data.settings.onboarded && !doneSetup;
   const needsTour = data.settings.onboarded && !data.settings.tourDone && !doneTour;
