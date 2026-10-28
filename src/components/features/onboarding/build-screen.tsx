@@ -87,17 +87,15 @@ export function BuildScreen({
         transition={{ duration: 0.8, ease: EASE, times: [0, 0.35, 1] }}
       >
         <svg viewBox="0 0 64 64" className="size-full">
-          {/* where each block is going, so the shape is readable
-              before it is finished */}
+          {/* where each block is going, held very faintly so the
+              mark has somewhere to land without looking like a
+              thing that failed to load */}
           {BLOCKS.map((b, i) => (
             <rect
               key={`ghost-${i}`}
               x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={0.8}
-              strokeDasharray="2 2"
-              className="text-subtle-foreground"
+              fill={`var(--hue-${b.hue})`}
+              opacity={0.1}
             />
           ))}
 
@@ -108,16 +106,11 @@ export function BuildScreen({
               <motion.rect
                 key={`block-${i}`}
                 x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
-                fill="currentColor"
-                className="text-primary"
-                initial={{
-                  opacity: 0,
-                  x: b.x < 32 ? -14 : 14,
-                  y: b.y < 32 ? -14 : 14,
-                }}
-                animate={{ opacity: 1, x: 0, y: 0 }}
+                fill={`var(--hue-${b.hue})`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{
-                  duration: 0.62,
+                  duration: 0.5,
                   ease: [0.22, 0.9, 0.24, 1],
                   delay: sealed ? i * 0.07 : 0,
                 }}

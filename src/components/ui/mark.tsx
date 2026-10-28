@@ -14,15 +14,22 @@ import { cn } from "@/lib/utils";
  * can risk.
  */
 /** The mark's rectangles, so anything that draws it draws the
-    same shape. */
+    same shape. Each carries its own hue, because the blocks
+    stand for shares and the shares are never one colour. */
 export const MARK_BLOCKS = [
-  { x: 6, y: 6, w: 33, h: 26 },
-  { x: 43, y: 6, w: 15, h: 26 },
-  { x: 6, y: 36, w: 15, h: 22 },
-  { x: 25, y: 36, w: 33, h: 22 },
+  { x: 6, y: 6, w: 33, h: 26, hue: "green" },
+  { x: 43, y: 6, w: 15, h: 26, hue: "teal" },
+  { x: 6, y: 36, w: 15, h: 22, hue: "purple" },
+  { x: 25, y: 36, w: 33, h: 22, hue: "orange" },
 ];
 
-export function Mark({ className }: { className?: string }) {
+export function Mark({
+  className, colour = false,
+}: {
+  className?: string;
+  /** four hues instead of one flat colour */
+  colour?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 64 64"
@@ -35,7 +42,7 @@ export function Mark({ className }: { className?: string }) {
         <rect
           key={i}
           x={b.x} y={b.y} width={b.w} height={b.h} rx={3}
-          fill="currentColor"
+          fill={colour ? `var(--hue-${b.hue})` : "currentColor"}
         />
       ))}
     </svg>
@@ -43,15 +50,23 @@ export function Mark({ className }: { className?: string }) {
 }
 
 /** The mark in a circle, for the rail and the wizard header. */
-export function MarkBadge({ className }: { className?: string }) {
+export function MarkBadge({
+  className, colour = true,
+}: {
+  className?: string;
+  colour?: boolean;
+}) {
   return (
     <span
       className={cn(
-        "grid place-items-center rounded-full bg-primary text-primary-foreground",
+        "grid place-items-center rounded-full",
+        colour
+          ? "bg-card-2 ring-1 ring-border-soft"
+          : "bg-primary text-primary-foreground",
         className,
       )}
     >
-      <Mark className="size-[56%]" />
+      <Mark className="size-[56%]" colour={colour} />
     </span>
   );
 }
