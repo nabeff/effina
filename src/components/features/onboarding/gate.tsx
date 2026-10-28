@@ -25,6 +25,13 @@ export function OnboardingGate() {
   /* closing is local, so the sheet goes away at once rather than
      waiting on a round trip to the database */
   const [doneSetup, setDoneSetup] = useState(false);
+  /* Once the wizard is on screen it owns the screen until it
+     says otherwise. Its last job marks the account onboarded,
+     which refetches the budget, which would otherwise unmount
+     the wizard mid finish and drop the person on the dashboard
+     before the animation had played. The wizard tells us when
+     it has taken over, from an event rather than a render. */
+  const [started, setStarted] = useState(false);
   const [doneTour, setDoneTour] = useState(false);
 
   /* Until the budget has loaded, nobody knows whether setup is
@@ -46,7 +53,7 @@ export function OnboardingGate() {
     );
   }
 
-  const needsSetup = !data.settings.onboarded && !doneSetup;
+  const needsSetup = (!data.settings.onboarded || started) && !doneSetup;
   const needsTour = data.settings.onboarded && !data.settings.tourDone && !doneTour;
 
   async function finishTour() {
@@ -65,6 +72,7 @@ export function OnboardingGate() {
     return (
       <Wizard
         currency={data.settings.currency}
+        onStart={() => setStarted(true)}
         onClose={() => setDoneSetup(true)}
       />
     );

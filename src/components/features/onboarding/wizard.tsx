@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft } from "lucide-react";
@@ -26,9 +26,12 @@ import { useResumable } from "@/lib/hooks/use-resumable";
  * out halfway leaves the real budget exactly as it was.
  */
 export function Wizard({
-  currency = "DH", onClose,
+  currency = "DH", onStart, onClose,
 }: {
   currency?: string;
+  /** fired once the wizard has the screen, so whoever mounted it
+      can keep it mounted through the finish */
+  onStart?: () => void;
   onClose: () => void;
 }) {
   /* both survive a refresh, so reloading halfway does not throw
@@ -47,6 +50,10 @@ export function Wizard({
     () => emptyDraft(""),
   );
   const client = useQueryClient();
+
+  useEffect(() => {
+    onStart?.();
+  }, [onStart]);
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
