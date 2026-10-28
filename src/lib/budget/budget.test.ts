@@ -18,6 +18,7 @@ import {
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
   makeHundred, recommendedSplit,
   AREAS, splitFromItems, defaultPicks,
+  signals, idleRotation,
   dayStrip, nextWin, goalDone,
   readLayout, moveCard, nextWidth, isDefault, DASH_CARDS, WIDTHS, reorder,
   cashFlow, savingsRate, spendByCategory, insights, lastMonth, upcomingBills,
@@ -777,5 +778,66 @@ describe("splitFromItems", () => {
     const split = splitFromItems(["savings", "groceries", "debt"]);
     expect(split.find((e) => e.name === "The future")?.kind).toBe("save");
     expect(split.find((e) => e.name === "What you owe")?.kind).toBe("debt");
+  });
+});
+
+/* ---- the island ---- */
+
+describe("signals", () => {
+  const now = new Date(2026, 9, 26);
+  const data = seedBudget(now);
+  const st = stats(data, "2026-10", now);
+
+  it("never returns nothing, because an empty island reads as broken", () => {
+    const quiet = {
+      ...data,
+      goals: [],
+      settings: { ...data.settings, taxRate: 0 },
+    };
+    const qs = stats(quiet, "2026-10", now);
+    const out = signals(
+      { ...quiet, transactions: [], bills: [] },
+      { ...qs, envRows: [], billRows: [], income: 0 },
+      { now },
+    );
+    expect(out.length).toBeGreaterThan(0);
+  });
+
+  it("puts an overspent envelope before a bill due today", () => {
+    const out = signals(
+      data,
+      {
+        ...st,
+        envRows: [
+          { ...st.envRows[0], status: "over", spent: 900, planned: 500 },
+        ],
+        billRows: [
+          { ...data.bills[0], planned: 100, spent: 0, paid: false, dueDay: 26 },
+        ],
+      },
+      { now },
+    );
+    expect(out[0].kind).toBe("overspent");
+    expect(out[1]?.kind).toBe("bill");
+  });
+
+  it("puts a sync ahead of everything, because it is happening now", () => {
+    const out = signals(data, st, { now, syncing: true });
+    expect(out[0].kind).toBe("sync");
+  });
+
+  it("ranks in the order money matters: lost, leaving, pace, in, goals", () => {
+    const ranks = signals(data, st, { now }).map((s) => s.rank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+  });
+
+  it("rotates through no more than two lines", () => {
+    expect(idleRotation(signals(data, st, { now })).length).toBeLessThanOrEqual(2);
+  });
+
+  it("gives every signal a line short enough for the pill", () => {
+    for (const s of signals(data, st, { now })) {
+      expect(s.line.length).toBeLessThanOrEqual(34);
+    }
   });
 });
