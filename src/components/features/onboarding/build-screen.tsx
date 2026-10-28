@@ -139,7 +139,7 @@ export function BuildScreen({
       {sealed && !failed ? (
         <Summary draft={draft} onDone={onDone} />
       ) : (
-        <div className="mt-7 flex w-full max-w-[280px] flex-col items-start gap-2.5">
+        <div className="mt-7 flex w-full max-w-[320px] flex-col divide-y divide-border-soft rounded-[var(--radius-md)] bg-fill-2 px-4">
           {jobs.map((j, i) => {
             const ticked = i < at;
             const current = i === at && !failed && !sealed;
@@ -148,7 +148,7 @@ export function BuildScreen({
                 key={j.label}
                 animate={{ opacity: ticked || current ? 1 : 0.35 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center gap-2.5 text-[13.5px]"
+                className="flex items-center gap-2.5 py-2.5 text-left text-[13.5px]"
               >
                 <span
                   className={cn(
