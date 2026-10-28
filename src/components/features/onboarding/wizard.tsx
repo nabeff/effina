@@ -220,6 +220,7 @@ export function Wizard({
           ) : building ? (
             <BuildScreen
               jobs={jobs}
+              draft={draft}
               onDone={onClose}
               onError={(m) => toast.error(m)}
             />

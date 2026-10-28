@@ -1,29 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, useSpring, type MotionValue } from "framer-motion";
 import { draftFlex, draftSplitTotal, type Draft } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
 
 /**
- * The pause after the split.
+ * The shape of a month.
  *
- * Coins arc out of the month and land in the envelopes that
- * claimed them, one envelope at a time, biggest share first. It
- * is the only moment in setup where the answers become a thing
- * that moves, so it is worth the five seconds.
+ * One arm per area, the way a player's attributes are drawn in a
+ * football game. Every budget comes out as a shape nobody else
+ * has, and the shape is the point: somebody who saves hard and
+ * eats cheap looks nothing like somebody who does the reverse.
  *
- * The depth is real geometry, not a drawn shadow. Each envelope
- * is a box with a lit top face and a darker right face under one
- * shared light, so the whole row sits on the same ground.
+ * Flat. No perspective, no glass, no depth.
+ *
+ * Every arm has its own spring and the outline is rebuilt from
+ * their live values each frame. Animating the points attribute
+ * directly makes Framer interpolate a string, which is what
+ * made the growth look stepped instead of sprung.
  */
 
 const EASE = [0.32, 0.72, 0, 1] as const;
 
-/** how far the row is tipped away from the viewer */
-const TILT = 15;
-/** the apparent thickness of a box, in pixels of lid */
-const LID = 17;
+const SIZE = 380;
+const MID = SIZE / 2;
+/** how far the outer ring sits from the middle */
+const MAX_R = 132;
+/** the floor, so a small share is still a visible arm */
+const MIN_R = 34;
+/** soft and slow, so an arm settles rather than snaps */
+const SPRING = { stiffness: 80, damping: 20, mass: 1.1 } as const;
+/** how long between one arm and the next */
+const STEP = 580;
+/** the most arms the shape can hold */
+const MAX_ARMS = 8;
 
 export function Dividing({
   draft, onDone,
@@ -40,14 +51,12 @@ export function Dividing({
       draft.split
         .filter((e) => e.pct > 0)
         .sort((a, b) => b.pct - a.pct)
-        .slice(0, 6),
+        .slice(0, MAX_ARMS),
     [draft.split],
   );
 
-  /* which envelope is being filled right now */
+  /* how many arms have been claimed so far */
   const [at, setAt] = useState(-1);
-
-  const biggest = Math.max(...parts.map((p) => p.pct), 1);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -55,248 +64,220 @@ export function Dividing({
       const t = setTimeout(onDone, 400);
       return () => clearTimeout(t);
     }
-
     const timers: ReturnType<typeof setTimeout>[] = [];
     parts.forEach((_, i) => {
-      timers.push(setTimeout(() => setAt(i), 620 + i * 540));
+      timers.push(setTimeout(() => setAt(i), 800 + i * STEP));
     });
-    timers.push(setTimeout(onDone, 620 + parts.length * 540 + 1500));
-
+    timers.push(setTimeout(onDone, 800 + parts.length * STEP + 1900));
     return () => timers.forEach(clearTimeout);
   }, [parts, onDone]);
 
-  /* what is still unspent, which drains as each envelope fills */
-  const spent = parts.slice(0, at + 1).reduce((a, e) => a + e.pct, 0);
-  /* the last one takes whatever is left, so the month lands on
-     nothing rather than on the rounding */
-  const left =
-    at >= parts.length - 1
-      ? 0
-      : Math.max(0, Math.round(flex - (flex * spent) / total));
+  const n = parts.length;
+  const biggest = Math.max(...parts.map((p) => p.pct), 1);
+
+  /* straight up for the first arm, then evenly round */
+  const point = useCallback(
+    (i: number, r: number) => {
+      const a = (i / Math.max(1, n)) * Math.PI * 2 - Math.PI / 2;
+      return { x: MID + Math.cos(a) * r, y: MID + Math.sin(a) * r };
+    },
+    [n],
+  );
+
+  const targets = useMemo(
+    () =>
+      Array.from({ length: MAX_ARMS }, (_, i) =>
+        parts[i] && i <= at
+          ? MIN_R + (parts[i].pct / biggest) * (MAX_R - MIN_R)
+          : 0,
+      ),
+    [parts, at, biggest],
+  );
+
+  const arms = useArms(targets);
 
   return (
     <div className="py-2 text-center select-none">
-      {/* the month, which empties as the envelopes fill */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
+        transition={{ duration: 0.6, ease: EASE }}
       >
         <div className="text-[12.5px] font-semibold tracking-[0.02em] text-muted-foreground">
           Your month
         </div>
-        <Counting
-          value={left}
-          unit={unit}
-          className="mt-1.5 text-[42px] leading-none font-bold tracking-[-0.038em] tabular"
-        />
+        <div className="mt-1.5 text-[38px] leading-none font-bold tracking-[-0.038em] tabular">
+          {money(flex, unit)}
+        </div>
       </motion.div>
 
-      {/* the arc, one coin per envelope being filled */}
-      <div className="relative mx-auto mt-7 h-[86px] w-full max-w-[520px]">
-        {parts.map((e, i) => {
-          const live = i === at;
-          const x = ((i + 0.5) / parts.length) * 100;
-          /* it leaves the middle and swings out to its envelope,
-             so the money visibly comes from one place */
-          const from = (0.5 - (i + 0.5) / parts.length) * 520;
-          return (
-            <motion.span
-              key={`${e.name}-coin`}
-              className="absolute top-0 size-[14px] rounded-full"
-              style={{
-                left: `${x}%`,
-                marginLeft: -7,
-                background: `var(--hue-${e.hue})`,
-                boxShadow: `0 0 16px color-mix(in srgb, var(--hue-${e.hue}) 55%, transparent)`,
-              }}
-              initial={{ opacity: 0, x: from, y: -26, scale: 0.4 }}
-              animate={
-                live
-                  ? {
-                      opacity: [0, 1, 1, 0],
-                      x: [from, from * 0.45, 0, 0],
-                      y: [-30, 8, 62, 86],
-                      scale: [0.4, 1.1, 1, 0.7],
-                    }
-                  : { opacity: 0 }
-              }
-              transition={{
-                duration: 0.92,
-                ease: [0.34, 0.02, 0.28, 1],
-                times: [0, 0.22, 0.8, 1],
-              }}
+      <div className="relative mx-auto mt-4" style={{ width: SIZE, height: SIZE }}>
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="size-full overflow-visible">
+          {/* one dashed ring, as a scale. Any more and it is a
+              spider web competing with the shape. */}
+          <motion.polygon
+            points={parts
+              .map((_, i) => {
+                const p = point(i, MAX_R);
+                return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+              })
+              .join(" ")}
+            fill="none"
+            stroke="var(--border-soft)"
+            strokeWidth={1}
+            strokeDasharray="3 4"
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 0.32, scale: 1 }}
+            transition={{ duration: 0.7, ease: EASE }}
+            style={{ transformOrigin: `${MID}px ${MID}px` }}
+          />
+
+          <Outline arms={arms.slice(0, n)} point={point} visible={at >= 0} />
+
+          {parts.map((e, i) => (
+            <Dot
+              key={`dot-${e.name}`}
+              arm={arms[i]}
+              point={point}
+              index={i}
+              hue={e.hue}
+              shown={i <= at}
             />
+          ))}
+        </svg>
+
+        {/* the labels, outside the shape, each on its own arm */}
+        {parts.map((e, i) => {
+          const p = point(i, MAX_R + 34);
+          /* a label left of the middle reads right to left */
+          const side = p.x < MID - 4 ? "end" : p.x > MID + 4 ? "start" : "center";
+          return (
+            <motion.div
+              key={`label-${e.name}`}
+              className="absolute w-[100px] text-[11.5px] leading-tight"
+              style={{
+                left: p.x,
+                top: p.y,
+                transform: `translate(${
+                  side === "end" ? "-100%" : side === "start" ? "0" : "-50%"
+                }, -50%)`,
+                textAlign: side === "center" ? "center" : side,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: i <= at ? 1 : 0 }}
+              transition={{ duration: 0.55, ease: EASE, delay: i <= at ? 0.4 : 0 }}
+            >
+              <div className="truncate text-muted-foreground">{e.name}</div>
+              <div className="font-semibold tabular">
+                {Math.round((flex * e.pct) / total)}
+              </div>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* the envelopes, filling in turn, standing on one ground */}
-      <div className="relative mx-auto w-full max-w-[520px]">
-        <div
-          className="flex items-end justify-center gap-4 pt-6"
-          style={{ perspective: 900, perspectiveOrigin: "50% 20%" }}
-        >
-        {parts.map((e, i) => {
-          const filled = i <= at;
-          const height = Math.round(62 + (e.pct / biggest) * 96);
-          return (
-            <Box
-              key={e.name}
-              name={e.name}
-              hue={e.hue}
-              height={height}
-              filled={filled}
-              amount={Math.round((flex * e.pct) / total)}
-            />
-          );
-          })}
-        </div>
-
-        {/* the shelf, so the row sits on something */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.14] to-transparent" />
-      </div>
-
       <motion.p
-        initial={{ opacity: 0, y: 6 }}
-        animate={
-          at >= parts.length - 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }
-        }
-        transition={{ duration: 0.55, ease: EASE }}
-        className="mt-8 text-[14px] text-muted-foreground"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: at >= n - 1 ? 1 : 0 }}
+        transition={{ duration: 0.7, delay: 0.7 }}
+        className="mt-6 text-[14px] text-muted-foreground"
       >
-        Every dirham has somewhere to be.
+        This is the shape of your month.
       </motion.p>
     </div>
   );
 }
 
-/**
- * One envelope, as a box rather than a bar.
- *
- * Three faces share a single hue, lit from the top left: the lid
- * brightest, the front plain, the right side darkest. The fill
- * rises inside the front face and the lid lights up with it, so
- * the box reads as holding something rather than being painted.
- */
-function Box({
-  name, hue, height, filled, amount,
-}: {
-  name: string;
-  hue: string;
-  height: number;
-  filled: boolean;
-  amount: number;
-}) {
-  const c = `var(--hue-${hue})`;
+type Point = (i: number, r: number) => { x: number; y: number };
 
-  return (
-    <div className="flex min-w-0 flex-1 flex-col items-center">
-      <motion.div
-        className="relative w-full"
-        style={{
-          height,
-          transformStyle: "preserve-3d",
-          transform: `rotateX(${TILT}deg)`,
-        }}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
-      >
-        {/* the lid, which catches the light and brightens when full */}
-        <motion.div
-          className="absolute inset-x-0 top-0 rounded-[4px]"
-          style={{
-            height: LID,
-            /* it stands on the front face's top edge and lies
-               back from there, so the whole lid is visible */
-            top: -LID,
-            transform: "rotateX(72deg)",
-            transformOrigin: "50% 100%",
-          }}
-          animate={{
-            background: filled
-              ? `linear-gradient(to bottom, color-mix(in srgb, ${c} 62%, white), color-mix(in srgb, ${c} 95%, white))`
-              : "linear-gradient(to bottom, var(--card-2), var(--card))",
-          }}
-          transition={{ duration: 0.55, delay: filled ? 0.42 : 0, ease: EASE }}
-        />
+/** One spring per arm, so the outline can be read live. */
+function useArms(targets: number[]) {
+  const a = useSpring(0, SPRING);
+  const b = useSpring(0, SPRING);
+  const c = useSpring(0, SPRING);
+  const d = useSpring(0, SPRING);
+  const e = useSpring(0, SPRING);
+  const f = useSpring(0, SPRING);
+  const g = useSpring(0, SPRING);
+  const h = useSpring(0, SPRING);
 
-        {/* the right side, the face turned away from the light */}
-        <motion.div
-          className="absolute top-0 right-0 h-full w-[9px] rounded-[3px]"
-          style={{
-            transform: "rotateY(58deg)",
-            transformOrigin: "0% 50%",
-          }}
-          animate={{
-            background: filled
-              ? `color-mix(in srgb, ${c} 58%, black)`
-              : "var(--card)",
-          }}
-          transition={{ duration: 0.55, delay: filled ? 0.42 : 0, ease: EASE }}
-        />
-
-        {/* the front, where the money actually rises */}
-        <div
-          className="relative h-full w-full overflow-hidden rounded-[6px] border border-white/[0.06] bg-fill-2"
-          style={{
-            boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.05)",
-          }}
-        >
-          <motion.span
-            className="absolute inset-x-0 bottom-0 block"
-            style={{
-              background: `linear-gradient(to bottom, color-mix(in srgb, ${c} 88%, white) 0%, ${c} 42%, color-mix(in srgb, ${c} 78%, black) 100%)`,
-            }}
-            initial={{ height: "0%" }}
-            animate={{ height: filled ? "100%" : "0%" }}
-            transition={{ duration: 0.66, delay: filled ? 0.4 : 0, ease: EASE }}
-          />
-        </div>
-
-        {/* the glow it throws on the ground once it is full */}
-        <motion.div
-          className="pointer-events-none absolute inset-x-[-14%] bottom-[-9px] h-[16px] rounded-[50%] blur-[8px]"
-          style={{ background: c }}
-          animate={{ opacity: filled ? 0.32 : 0 }}
-          transition={{ duration: 0.6, delay: filled ? 0.45 : 0 }}
-        />
-      </motion.div>
-
-      <motion.span
-        className="w-full pt-2.5 text-[11.5px] leading-tight"
-        animate={{ opacity: filled ? 1 : 0.3 }}
-        transition={{ duration: 0.4, delay: filled ? 0.48 : 0 }}
-      >
-        <span className="block truncate text-muted-foreground">
-          {name}
-        </span>
-        <span className="mt-0.5 block text-[13.5px] font-semibold text-foreground tabular">
-          {filled ? <Counting value={amount} /> : 0}
-        </span>
-      </motion.span>
-    </div>
-  );
-}
-
-/** A figure that rolls to its value instead of appearing at it. */
-function Counting({
-  value, unit, className,
-}: {
-  value: number;
-  unit?: string;
-  className?: string;
-}) {
-  const mv = useMotionValue(value);
-  const spring = useSpring(mv, { stiffness: 90, damping: 20, mass: 0.6 });
-  const text = useTransform(spring, (n) =>
-    unit ? money(Math.round(n), unit) : String(Math.round(n)),
+  const arms = useMemo(
+    () => [a, b, c, d, e, f, g, h],
+    [a, b, c, d, e, f, g, h],
   );
 
   useEffect(() => {
-    mv.set(value);
-  }, [mv, value]);
+    arms.forEach((mv, i) => mv.set(targets[i] ?? 0));
+  }, [arms, targets]);
 
-  return <motion.span className={className}>{text}</motion.span>;
+  return arms;
+}
+
+/** Reads every arm on each frame and redraws the outline. */
+function Outline({
+  arms, point, visible,
+}: {
+  arms: MotionValue<number>[];
+  point: Point;
+  visible: boolean;
+}) {
+  const [points, setPoints] = useState("");
+
+  useEffect(() => {
+    const read = () =>
+      setPoints(
+        arms
+          .map((mv, i) => {
+            const p = point(i, mv.get());
+            return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+          })
+          .join(" "),
+      );
+    read();
+    const stops = arms.map((mv) => mv.on("change", read));
+    return () => stops.forEach((stop) => stop());
+  }, [arms, point]);
+
+  return (
+    <motion.polygon
+      points={points}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={{ duration: 0.5, ease: EASE }}
+      fill="color-mix(in srgb, var(--primary) 11%, transparent)"
+      stroke="var(--primary)"
+      strokeWidth={1.75}
+      strokeLinejoin="round"
+      strokeLinecap="round"
+    />
+  );
+}
+
+/** A corner, riding the same spring as its arm. */
+function Dot({
+  arm, point, index, hue, shown,
+}: {
+  arm: MotionValue<number>;
+  point: Point;
+  index: number;
+  hue: string;
+  shown: boolean;
+}) {
+  const [pos, setPos] = useState(() => point(index, 0));
+
+  useEffect(() => {
+    const read = () => setPos(point(index, arm.get()));
+    read();
+    return arm.on("change", read);
+  }, [arm, point, index]);
+
+  return (
+    <motion.circle
+      cx={pos.x}
+      cy={pos.y}
+      r={4}
+      fill={`var(--hue-${hue})`}
+      animate={{ opacity: shown ? 1 : 0 }}
+      transition={{ duration: 0.45, ease: EASE }}
+    />
+  );
 }
