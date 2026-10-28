@@ -70,27 +70,32 @@ export function DividingCoins({
         {money(left, unit)}
       </div>
 
-      <div className="mx-auto mt-8 flex w-full max-w-[460px] items-end justify-center gap-3.5">
+      <div className="relative mx-auto mt-10 w-full max-w-[470px]">
+        <div className="flex items-end justify-center gap-4">
         {parts.map((e, i) => (
           <Jar
             key={e.name}
             name={e.name}
             hue={e.hue}
             /* three to seven coins, by share */
-            coins={Math.max(4, Math.round((e.pct / biggest) * 9))}
+            coins={Math.max(6, Math.round((e.pct / biggest) * 13))}
             share={e.pct / biggest}
             pouring={i === at}
             done={i < at}
             amount={Math.round((flex * e.pct) / total)}
           />
-        ))}
+          ))}
+        </div>
+
+        {/* the shelf they stand on, so nothing floats */}
+        <div className="mt-[-1px] h-px w-full bg-gradient-to-r from-transparent via-white/[0.14] to-transparent" />
       </div>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: at >= parts.length - 1 ? 1 : 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="mt-10 text-[14px] text-muted-foreground"
+        className="mt-12 text-[14px] text-muted-foreground"
       >
         Every dirham has somewhere to be.
       </motion.p>
@@ -98,8 +103,8 @@ export function DividingCoins({
   );
 }
 
-const JAR_H = 104;
-const COIN = 15;
+const JAR_H = 96;
+const COIN = 17;
 
 function Jar({
   name, hue, coins, share, pouring, done, amount,
@@ -115,18 +120,21 @@ function Jar({
 }) {
   const c = `var(--hue-${hue})`;
   const show = pouring || done;
-  const fillTo = Math.round(JAR_H * (0.42 + share * 0.5));
+  const fillTo = Math.round(JAR_H * (0.5 + share * 0.42));
 
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-2.5">
       <div className="relative w-full" style={{ height: JAR_H + 30 }}>
         {/* the glass */}
         <div
-          className="absolute inset-x-0 bottom-0 overflow-hidden rounded-t-[4px] rounded-b-[11px] border border-white/[0.09] border-t-transparent"
+          className="absolute inset-x-0 bottom-0 overflow-hidden rounded-t-[3px] rounded-b-[10px] border border-white/[0.1] border-t-white/[0.22]"
           style={{
             height: JAR_H,
+            /* glass is brightest at its two edges and almost
+               nothing across the middle */
             background:
-              "linear-gradient(to right, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.015) 30%, rgb(255 255 255 / 0.015) 70%, rgb(255 255 255 / 0.06))",
+              "linear-gradient(to right, rgb(255 255 255 / 0.085) 0%, rgb(255 255 255 / 0.012) 22%, rgb(255 255 255 / 0.012) 78%, rgb(255 255 255 / 0.1) 100%)",
+            boxShadow: "inset 0 -10px 18px -12px rgb(255 255 255 / 0.22)",
           }}
         >
           {/* the stack, which grows as the coins land */}
@@ -136,21 +144,23 @@ function Jar({
             /* the pile reaches as high as the share deserves,
                so a jar visibly fills rather than keeping a few
                coins at the bottom of a tall glass */
-            const rows = Math.ceil(coins / 2);
-            const step = Math.min(COIN * 0.66, (fillTo - 10) / Math.max(1, rows - 1));
-            const row = Math.floor(n / 2);
+            const rows = Math.ceil(coins / 3);
+            const step = Math.min(COIN * 0.44, (fillTo - 10) / Math.max(1, rows - 1));
+            const row = Math.floor(n / 3);
             const bottom = 8 + row * step;
-            const lean = (n % 2 === 0 ? -1 : 1) * (5 + (n % 3) * 3);
+            const lean = ((n % 3) - 1) * 6 + (n % 2 === 0 ? -1.5 : 1.5);
             return (
               <motion.span
                 key={n}
                 className="absolute left-1/2 rounded-full"
                 style={{
                   width: COIN,
-                  height: COIN * 0.72,
+                  height: COIN * 0.52,
                   marginLeft: -COIN / 2,
-                  background: `linear-gradient(to bottom, color-mix(in srgb, ${c} 55%, white), ${c} 55%, color-mix(in srgb, ${c} 70%, black))`,
-                  boxShadow: `0 1px 2px rgb(0 0 0 / 0.45)`,
+                  /* edge, face and a lit top, so it reads as a
+                     struck disc seen nearly side on */
+                  background: `linear-gradient(to bottom, color-mix(in srgb, ${c} 38%, white) 0%, ${c} 38%, color-mix(in srgb, ${c} 55%, black) 72%, color-mix(in srgb, ${c} 30%, black) 100%)`,
+                  boxShadow: `0 1px 1px rgb(0 0 0 / 0.55), inset 0 0.5px 0 rgb(255 255 255 / 0.45)`,
                 }}
                 initial={{ opacity: 0, y: -JAR_H - 40, x: lean * 2, rotate: -22 }}
                 animate={
@@ -180,12 +190,12 @@ function Jar({
       </div>
 
       <motion.span
-        className="w-full text-[11.5px] leading-tight"
-        animate={{ opacity: show ? 1 : 0.32 }}
+        className="w-full pt-1 text-[11.5px] leading-tight"
+        animate={{ opacity: show ? 1 : 0.3 }}
         transition={{ duration: 0.4, delay: show ? 0.3 : 0 }}
       >
-        <span className="block text-muted-foreground text-balance">{name}</span>
-        <span className="mt-0.5 block text-[13px] font-semibold text-foreground tabular">
+        <span className="block truncate text-muted-foreground">{name}</span>
+        <span className="mt-0.5 block text-[13.5px] font-semibold text-foreground tabular">
           {show ? amount : 0}
         </span>
       </motion.span>

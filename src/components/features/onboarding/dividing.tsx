@@ -132,10 +132,11 @@ export function Dividing({
       </div>
 
       {/* the envelopes, filling in turn, standing on one ground */}
-      <div
-        className="relative mx-auto flex w-full max-w-[520px] items-end justify-center gap-4 pt-5"
-        style={{ perspective: 900, perspectiveOrigin: "50% 20%" }}
-      >
+      <div className="relative mx-auto w-full max-w-[520px]">
+        <div
+          className="flex items-end justify-center gap-4 pt-6"
+          style={{ perspective: 900, perspectiveOrigin: "50% 20%" }}
+        >
         {parts.map((e, i) => {
           const filled = i <= at;
           const height = Math.round(62 + (e.pct / biggest) * 96);
@@ -149,7 +150,11 @@ export function Dividing({
               amount={Math.round((flex * e.pct) / total)}
             />
           );
-        })}
+          })}
+        </div>
+
+        {/* the shelf, so the row sits on something */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.14] to-transparent" />
       </div>
 
       <motion.p
@@ -186,7 +191,7 @@ function Box({
   const c = `var(--hue-${hue})`;
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-2.5">
+    <div className="flex min-w-0 flex-1 flex-col items-center">
       <motion.div
         className="relative w-full"
         style={{
@@ -252,7 +257,7 @@ function Box({
 
         {/* the glow it throws on the ground once it is full */}
         <motion.div
-          className="pointer-events-none absolute inset-x-[-18%] bottom-[-14px] h-[22px] rounded-[50%] blur-[9px]"
+          className="pointer-events-none absolute inset-x-[-14%] bottom-[-9px] h-[16px] rounded-[50%] blur-[8px]"
           style={{ background: c }}
           animate={{ opacity: filled ? 0.32 : 0 }}
           transition={{ duration: 0.6, delay: filled ? 0.45 : 0 }}
@@ -260,14 +265,14 @@ function Box({
       </motion.div>
 
       <motion.span
-        className="w-full text-[11.5px] leading-tight"
-        animate={{ opacity: filled ? 1 : 0.32 }}
+        className="w-full pt-2.5 text-[11.5px] leading-tight"
+        animate={{ opacity: filled ? 1 : 0.3 }}
         transition={{ duration: 0.4, delay: filled ? 0.48 : 0 }}
       >
-        <span className="block text-[11.5px] leading-tight text-muted-foreground text-balance">
+        <span className="block truncate text-muted-foreground">
           {name}
         </span>
-        <span className="mt-0.5 block text-[13px] font-semibold text-foreground tabular">
+        <span className="mt-0.5 block text-[13.5px] font-semibold text-foreground tabular">
           {filled ? <Counting value={amount} /> : 0}
         </span>
       </motion.span>
