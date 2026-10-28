@@ -69,7 +69,7 @@ export function DividingCoins({
         {money(left, unit)}
       </div>
 
-      <div className="relative mx-auto mt-10 w-full max-w-[470px]">
+      <div className="relative mx-auto mt-10 w-full max-w-[520px]">
         <div className="flex items-end justify-center gap-4">
         {parts.map((e, i) => (
           <Jar
@@ -77,7 +77,7 @@ export function DividingCoins({
             name={e.name}
             hue={e.hue}
             /* three to seven coins, by share */
-            coins={Math.max(6, Math.round((e.pct / biggest) * 13))}
+            coins={Math.max(5, Math.round((e.pct / biggest) * 11))}
             share={e.pct / biggest}
             pouring={i === at}
             done={i < at}
@@ -102,8 +102,8 @@ export function DividingCoins({
   );
 }
 
-const JAR_H = 96;
-const COIN = 17;
+const JAR_H = 108;
+const COIN = 34;
 
 function Jar({
   name, hue, coins, share, pouring, done, amount,
@@ -119,21 +119,21 @@ function Jar({
 }) {
   const c = `var(--hue-${hue})`;
   const show = pouring || done;
-  const fillTo = Math.round(JAR_H * (0.5 + share * 0.42));
+  const fillTo = Math.round(JAR_H * (0.3 + share * 0.46));
 
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-2.5">
-      <div className="relative w-full" style={{ height: JAR_H + 30 }}>
+      <div className="relative w-full" style={{ height: JAR_H + 22 }}>
         {/* the glass */}
         <div
-          className="absolute inset-x-0 bottom-0 overflow-hidden rounded-t-[3px] rounded-b-[10px] border border-white/[0.1] border-t-white/[0.22]"
+          className="absolute inset-x-0 bottom-0 overflow-hidden rounded-b-[14px] border-x border-b border-white/[0.09]"
           style={{
             height: JAR_H,
             /* glass is brightest at its two edges and almost
                nothing across the middle */
             background:
-              "linear-gradient(to right, rgb(255 255 255 / 0.085) 0%, rgb(255 255 255 / 0.012) 22%, rgb(255 255 255 / 0.012) 78%, rgb(255 255 255 / 0.1) 100%)",
-            boxShadow: "inset 0 -10px 18px -12px rgb(255 255 255 / 0.22)",
+              "linear-gradient(to right, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.008) 20%, rgb(255 255 255 / 0.008) 80%, rgb(255 255 255 / 0.08) 100%)",
+            boxShadow: "inset 0 -8px 14px -10px rgb(255 255 255 / 0.3)",
           }}
         >
           {/* the stack, which grows as the coins land */}
@@ -143,18 +143,18 @@ function Jar({
             /* the pile reaches as high as the share deserves,
                so a jar visibly fills rather than keeping a few
                coins at the bottom of a tall glass */
-            const rows = Math.ceil(coins / 3);
-            const step = Math.min(COIN * 0.44, (fillTo - 10) / Math.max(1, rows - 1));
-            const row = Math.floor(n / 3);
-            const bottom = 8 + row * step;
-            const lean = ((n % 3) - 1) * 6 + (n % 2 === 0 ? -1.5 : 1.5);
+            const step = Math.min(COIN * 0.21, (fillTo - 8) / Math.max(1, coins - 1));
+            const bottom = 6 + n * step;
+            /* each one sits a hair off the last, the way a real
+               stack never lines up perfectly */
+            const lean = ((n % 3) - 1) * 1.6;
             return (
               <motion.span
                 key={n}
                 className="absolute left-1/2 rounded-full"
                 style={{
                   width: COIN,
-                  height: COIN * 0.52,
+                  height: COIN * 0.3,
                   marginLeft: -COIN / 2,
                   /* edge, face and a lit top, so it reads as a
                      struck disc seen nearly side on */
@@ -179,6 +179,16 @@ function Jar({
           })}
         </div>
 
+        {/* the rim, so the glass reads as open at the top */}
+        <div
+          className="pointer-events-none absolute inset-x-0 h-px"
+          style={{
+            bottom: JAR_H,
+            background:
+              "linear-gradient(to right, transparent, rgb(255 255 255 / 0.3) 18%, rgb(255 255 255 / 0.3) 82%, transparent)",
+          }}
+        />
+
         {/* the glow under a jar that has something in it */}
         <motion.div
           className="pointer-events-none absolute inset-x-[-20%] bottom-[-10px] h-[20px] rounded-[50%] blur-[10px]"
@@ -193,7 +203,9 @@ function Jar({
         animate={{ opacity: show ? 1 : 0.3 }}
         transition={{ duration: 0.4, delay: show ? 0.3 : 0 }}
       >
-        <span className="block truncate text-muted-foreground">{name}</span>
+        <span className="block text-[11.5px] leading-tight text-muted-foreground text-balance">
+          {name}
+        </span>
         <span className="mt-0.5 block text-[13.5px] font-semibold text-foreground tabular">
           {show ? amount : 0}
         </span>
