@@ -11,6 +11,7 @@
  */
 
 import type { Hue } from "@/types/budget";
+import { makeHundred, type DraftEnvelope } from "./onboarding";
 
 export interface AreaItem {
   id: string;
@@ -131,9 +132,9 @@ export const AREAS: Area[] = [
     hue: "mint",
     kind: "save",
     items: [
-      { id: "savings", name: "Savings", weight: 18 },
-      { id: "emergency", name: "Emergency fund", weight: 12 },
-      { id: "goals", name: "Something you are saving for", weight: 8 },
+      { id: "savings", name: "Savings", weight: 14 },
+      { id: "emergency", name: "Emergency fund", weight: 8 },
+      { id: "goals", name: "Something you are saving for", weight: 6 },
     ],
   },
   {
@@ -174,4 +175,64 @@ export function billItems(picked: string[]) {
     }
   }
   return out;
+}
+
+/**
+ * Turns the things a person picked into envelopes.
+ *
+ * One envelope per area, not per item, because nine areas make a
+ * readable budget and twenty six items make a spreadsheet. The
+ * area's share is the sum of its items' weights against every
+ * other picked weight, so picking a car moves money toward
+ * getting around without anyone naming a percentage.
+ *
+ * Bills are left out of the weighing. They are fixed amounts and
+ * get their own step.
+ */
+export function splitFromItems(picked: string[]): DraftEnvelope[] {
+  const out: DraftEnvelope[] = [];
+
+  for (const area of AREAS) {
+    const weight = area.items
+      .filter((i) => !i.bill && picked.includes(i.id))
+      .reduce((a, i) => a + i.weight, 0);
+    if (weight <= 0) continue;
+    out.push({
+      name: area.name,
+      pct: weight,
+      kind: area.kind,
+      icon: area.icon,
+      hue: area.hue,
+    });
+  }
+
+  return makeHundred(out);
+}
+
+/** The items inside an area that a person has picked. */
+export function pickedIn(area: Area, picked: string[]): AreaItem[] {
+  return area.items.filter((i) => picked.includes(i.id));
+}
+
+/**
+ * What opening an area ticks for you.
+ *
+ * The common answer, so the usual case is one tap and the rest
+ * is correction. Not everything in the area, which would make
+ * every area claim the same large share.
+ */
+export function suggestedIn(area: Area): string[] {
+  const bills = area.items.filter((i) => i.bill).map((i) => i.id);
+  const biggest = area.items
+    .filter((i) => !i.bill)
+    .sort((a, b) => b.weight - a.weight)[0];
+  return biggest ? [...bills, biggest.id] : bills;
+}
+
+/** Everything a person is likely to want, so nobody starts at zero. */
+export function defaultPicks(): string[] {
+  return [
+    "rent", "power", "groceries", "eating-out",
+    "transit", "fun", "savings", "emergency",
+  ];
 }

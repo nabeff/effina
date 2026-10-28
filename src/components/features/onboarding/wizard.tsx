@@ -253,8 +253,12 @@ export function Wizard({
                         onClick={() => {
                           if (last) return setBuilding(true);
                           /* pause on the split, the one answer
-                             worth showing back before moving on */
-                          if (step === SPLIT_STEP) return setDividing(true);
+                             worth showing back before moving on.
+                             With nothing picked there is nothing
+                             to divide, so it goes straight past. */
+                          if (step === SPLIT_STEP && draft.split.length) {
+                            return setDividing(true);
+                          }
                           setBack(false);
                           setStep(step + 1);
                         }}

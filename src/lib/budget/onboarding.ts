@@ -28,6 +28,8 @@ export interface Draft {
   currency: string;
   income: number;
   bills: DraftBill[];
+  /** the item ids a person ticked, which the split is worked out from */
+  picks: string[];
   split: DraftEnvelope[];
   debtName: string;
   debtTotal: number;
@@ -90,6 +92,7 @@ export function emptyDraft(currency = "DH"): Draft {
     currency,
     income: 0,
     bills: [],
+    picks: [],
     split: recommendedSplit(),
     debtName: "",
     debtTotal: 0,

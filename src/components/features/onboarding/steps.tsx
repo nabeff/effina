@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines, Briefcase, Car, CheckCheck, Dumbbell, Gift, HeartHandshake,
   House, Landmark, Lightbulb, Minus, PartyPopper, Percent, PiggyBank,
   Plus, Receipt, Router, ShieldCheck, ShoppingCart, Smartphone, Sparkles,
-  Target, type LucideIcon,
+  Target, Check, HeartPulse, Users, type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +15,9 @@ import { Slider } from "@/components/ui/slider";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 import { cn } from "@/lib/utils";
 import {
-  BILL_PRESETS, draftBillTotal, draftFlex, draftSplitTotal,
-  ENVELOPE_OPTIONS, makeHundred,
-  type Draft, type DraftBill,
+  BILL_PRESETS, draftBillTotal, draftFlex,
+  AREAS, billItems, splitFromItems, suggestedIn,
+  type Area, type Draft, type DraftBill,
 } from "@/lib/budget";
 import { money, money0 } from "@/lib/utils/money";
 
@@ -25,6 +27,7 @@ const icons: Record<string, LucideIcon> = {
   "shopping-cart": ShoppingCart, "piggy-bank": PiggyBank, briefcase: Briefcase,
   car: Car, gift: Gift, "shield-check": ShieldCheck,
   "heart-handshake": HeartHandshake, "party-popper": PartyPopper, percent: Percent,
+  "heart-pulse": HeartPulse, users: Users,
 };
 
 export interface StepProps {
@@ -205,128 +208,186 @@ export function StepBills({ draft, set }: StepProps) {
 }
 
 /* ---- 4, the split ---- */
+
+/**
+ * Two questions, not a wall of sliders.
+ *
+ * First which parts of a life apply, then what is actually in
+ * them. Nobody knows what share of their income transport should
+ * take, but everybody knows whether they have a car, so the
+ * shares are worked out from the answers and only shown to the
+ * person who asks to see them.
+ */
 export function StepSplit({ draft, set }: StepProps) {
   const flex = draftFlex(draft);
-  const total = draftSplitTotal(draft);
-  const ok = Math.abs(total - 100) < 0.05;
+  const unitName = unit(draft);
+  const picks = draft.picks;
 
-  const has = (name: string) => draft.split.some((e) => e.name === name);
+  /* an area counts as chosen once anything inside it is ticked */
+  const chosen = AREAS.filter((a) => a.items.some((i) => picks.includes(i.id)));
+  const [open, setOpen] = useState<string[]>(() => chosen.map((a) => a.id));
+  const [showShares, setShowShares] = useState(false);
 
-  /* turning one on takes its share from the others, so the total
-     stays at 100 and nobody has to do the arithmetic */
-  function toggle(opt: (typeof ENVELOPE_OPTIONS)[number]) {
-    if (has(opt.name)) {
-      const rest = draft.split.filter((e) => e.name !== opt.name);
-      return set({ split: makeHundred(rest) });
+  const isOpen = (id: string) => open.includes(id);
+
+  /* opening an area ticks the things most people in it have, so
+     the common answer takes one tap and the rest is correction */
+  function toggleArea(area: Area) {
+    if (isOpen(area.id)) {
+      setOpen((o) => o.filter((x) => x !== area.id));
+      return commit(picks.filter((p) => !area.items.some((i) => i.id === p)));
     }
-    const { name, pct, kind, icon, hue } = opt;
-    const room = Math.max(0, 100 - pct);
-    const scaled = draft.split.map((e) => ({
-      ...e,
-      pct: Math.round((e.pct / (total || 100)) * room * 10) / 10,
-    }));
-    set({ split: makeHundred([...scaled, { name, pct, kind, icon, hue }]) });
+    setOpen((o) => [...o, area.id]);
+    const suggested = suggestedIn(area);
+    commit([...picks, ...suggested.filter((id) => !picks.includes(id))]);
   }
+
+  function toggleItem(id: string) {
+    commit(picks.includes(id) ? picks.filter((p) => p !== id) : [...picks, id]);
+  }
+
+  /* the picks are the answer, the split is only ever derived
+     from them, so the two can never drift apart */
+  function commit(next: string[]) {
+    set({ picks: next, split: splitFromItems(next) });
+  }
+
+  const bills = billItems(picks);
 
   return (
     <>
       <Head
-        title="What should the money cover"
+        title="What is in your life"
         sub={
           flex > 0
-            ? `${money(flex, unit(draft))} a month, once bills are paid.`
-            : "Pick what matters, then set how much each one takes."
+            ? `Pick what applies. ${money(flex, unitName)} a month gets divided across it.`
+            : "Pick what applies, and the shares work themselves out."
         }
       />
 
-      {/* choose the areas first. A wall of nine sliders asks you
-          to care about categories you may not have. */}
-      <div className="mb-5 flex flex-wrap gap-1.5">
-        {ENVELOPE_OPTIONS.map((opt) => {
-          const on = has(opt.name);
+      <div className="flex flex-col gap-2">
+        {AREAS.map((area) => {
+          const Icon = icons[area.icon] ?? Sparkles;
+          const on = isOpen(area.id);
+          const mine = area.items.filter((i) => picks.includes(i.id));
+          const share = draft.split.find((e) => e.name === area.name)?.pct ?? 0;
+
           return (
-            <button
-              key={opt.id}
-              onClick={() => toggle(opt)}
-              aria-pressed={on}
-              title={opt.hint}
+            <div
+              key={area.id}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
-                on
-                  ? "border-transparent bg-primary text-primary-foreground"
-                  : "border-border text-muted-foreground hover:bg-fill-2 hover:text-foreground",
+                "overflow-hidden rounded-[var(--radius-md)] border transition-colors",
+                on ? "border-border bg-fill-2" : "border-border-soft",
               )}
             >
-              {opt.name}
-            </button>
+              <button
+                onClick={() => toggleArea(area)}
+                aria-expanded={on}
+                className="flex w-full items-center gap-3 px-3.5 py-3 text-left"
+              >
+                <span
+                  className="grid size-8 flex-none place-items-center rounded-full"
+                  style={{
+                    background: on
+                      ? `color-mix(in srgb, var(--hue-${area.hue}) 22%, transparent)`
+                      : "var(--fill-2)",
+                    color: on ? `var(--hue-${area.hue})` : "var(--muted-foreground)",
+                  }}
+                >
+                  <Icon className="size-[17px]" />
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14.5px] font-semibold">{area.name}</span>
+                  <span className="block text-[12.5px] leading-snug text-muted-foreground text-pretty">
+                    {mine.length
+                      ? mine.map((i) => i.name).join(", ")
+                      : area.hint}
+                  </span>
+                </span>
+
+                {on && showShares && share > 0 ? (
+                  <span className="text-[13px] font-semibold tabular text-muted-foreground">
+                    {share}%
+                  </span>
+                ) : null}
+
+                <span
+                  className={cn(
+                    "grid size-[22px] flex-none place-items-center rounded-full border transition-colors",
+                    on
+                      ? "border-transparent bg-primary text-primary-foreground"
+                      : "border-border text-transparent",
+                  )}
+                >
+                  <Check className="size-[13px]" strokeWidth={3} />
+                </span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {on ? (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.26, ease: [0.32, 0.72, 0, 1] }}
+                  >
+                    <div className="flex flex-wrap gap-1.5 border-t border-border-soft px-3.5 pt-3 pb-3.5">
+                      {area.items.map((item) => {
+                        const ticked = picks.includes(item.id);
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => toggleItem(item.id)}
+                            aria-pressed={ticked}
+                            className={cn(
+                              "rounded-full border px-3 py-1.5 text-[13px] transition-colors",
+                              ticked
+                                ? "border-transparent text-foreground"
+                                : "border-border text-muted-foreground hover:text-foreground",
+                            )}
+                            style={
+                              ticked
+                                ? { background: `color-mix(in srgb, var(--hue-${area.hue}) 20%, transparent)` }
+                                : undefined
+                            }
+                          >
+                            {item.name}
+                            {item.bill ? (
+                              <span className="ml-1.5 text-[11px] text-subtle-foreground">bill</span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
           );
         })}
       </div>
 
-      <div
-        className="mb-4 flex items-center gap-3 rounded-[var(--radius-md)] px-3.5 py-3"
-        style={{
-          background: ok
-            ? "color-mix(in srgb, var(--primary) 12%, transparent)"
-            : "color-mix(in srgb, var(--warning) 12%, transparent)",
-        }}
-      >
-        <span className="text-[13px] font-semibold text-muted-foreground">Total</span>
-        <b
-          className="text-[19px] font-bold tabular"
-          style={{ color: ok ? "var(--primary)" : "var(--warning)" }}
+      {draft.split.length ? (
+        <button
+          onClick={() => setShowShares((s) => !s)}
+          className="mt-4 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
-          {total}%
-        </b>
-        <span className="ml-auto text-[12.5px] text-muted-foreground">
-          {ok
-            ? "Ready"
-            : total < 100
-              ? `${Math.round((100 - total) * 10) / 10}% still free`
-              : `${Math.round((total - 100) * 10) / 10}% over`}
-        </span>
-        {!ok ? (
-          <Button size="sm" variant="secondary" onClick={() => set({ split: makeHundred(draft.split) })}>
-            Even it out
-          </Button>
-        ) : null}
-      </div>
+          {showShares ? "Hide the shares" : "Show me the shares"}
+        </button>
+      ) : null}
 
-      {/* the name and its value on one line, the track beneath,
-          figures right aligned and tabular so they do not jump */}
-      <div className="flex flex-col divide-y divide-border-soft">
-        {draft.split.map((e, i) => (
-          <div key={e.name} className="py-3 first:pt-0 last:pb-0">
-            <div className="mb-2 flex items-baseline gap-2.5">
-              <span
-                className="size-[8px] flex-none rounded-full"
-                style={{ background: `var(--hue-${e.hue})` }}
-              />
-              <span className="min-w-0 flex-1 truncate text-[14px]">{e.name}</span>
-              {flex > 0 ? (
-                <span className="text-[13px] text-subtle-foreground tabular">
-                  {money0((flex * e.pct) / 100)}
-                </span>
-              ) : null}
-              <span className="w-[44px] text-right text-[14px] font-semibold tabular">
-                {e.pct}%
-              </span>
-            </div>
-            <Slider
-              value={[e.pct]} min={0} max={60} step={1}
-              onValueChange={(v) =>
-                set({
-                  split: draft.split.map((x, n) =>
-                    n === i ? { ...x, pct: Array.isArray(v) ? v[0] : v } : x,
-                  ),
-                })
-              }
-              aria-label={`${e.name} share`}
-              className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-0 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:shadow-[0_1px_3px_rgb(0_0_0/0.4)] [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-fill-2"
-            />
-          </div>
-        ))}
-      </div>
+      {bills.length ? (
+        <Tip icon={Receipt}>
+          {bills.length === 1 ? "One of these" : `${bills.length} of these`} are fixed
+          amounts rather than shares. You can put the figures in later, or on the bills
+          screen.
+        </Tip>
+      ) : (
+        <Tip icon={Sparkles}>
+          Nothing is final. Everything here can change once you see your month.
+        </Tip>
+      )}
     </>
   );
 }

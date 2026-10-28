@@ -17,6 +17,7 @@ import {
   notices, noticeCount, loggingGap, closePrompt,
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
   makeHundred, recommendedSplit,
+  AREAS, splitFromItems, defaultPicks,
   dayStrip, nextWin, goalDone,
   readLayout, moveCard, nextWidth, isDefault, DASH_CARDS, WIDTHS, reorder,
   cashFlow, savingsRate, spendByCategory, insights, lastMonth, upcomingBills,
@@ -733,5 +734,48 @@ describe("the card list itself", () => {
   it("has no duplicate ids", () => {
     const ids = DASH_CARDS.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+/* ---- life areas ---- */
+
+describe("splitFromItems", () => {
+  it("gives nothing back when nothing is picked", () => {
+    expect(splitFromItems([])).toEqual([]);
+  });
+
+  it("makes one envelope per area, not one per item", () => {
+    const split = splitFromItems(["groceries", "eating-out", "fun"]);
+    expect(split.map((e) => e.name)).toEqual(["Food", "Your own time"]);
+  });
+
+  it("always lands on 100", () => {
+    for (const picks of [
+      defaultPicks(),
+      ["groceries"],
+      ["groceries", "fuel", "savings", "family", "tax"],
+      AREAS.flatMap((a) => a.items.map((i) => i.id)),
+    ]) {
+      const total = splitFromItems(picks).reduce((a, e) => a + e.pct, 0);
+      expect(Math.round(total * 10) / 10).toBe(100);
+    }
+  });
+
+  it("moves money toward an area when more of it is picked", () => {
+    const one = splitFromItems(["groceries", "fuel"]);
+    const two = splitFromItems(["groceries", "fuel", "transit"]);
+    const share = (s: typeof one, name: string) =>
+      s.find((e) => e.name === name)?.pct ?? 0;
+    expect(share(two, "Getting around")).toBeGreaterThan(share(one, "Getting around"));
+  });
+
+  it("ignores bills, because those are fixed amounts", () => {
+    expect(splitFromItems(["rent", "power", "internet"])).toEqual([]);
+  });
+
+  it("carries the area's kind through, so savings stay savings", () => {
+    const split = splitFromItems(["savings", "groceries", "debt"]);
+    expect(split.find((e) => e.name === "The future")?.kind).toBe("save");
+    expect(split.find((e) => e.name === "What you owe")?.kind).toBe("debt");
   });
 });
