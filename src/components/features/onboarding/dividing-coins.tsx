@@ -17,7 +17,6 @@ import { money } from "@/lib/utils/money";
  * visibly gets the most without anybody reading a figure.
  */
 
-const EASE = [0.32, 0.72, 0, 1] as const;
 /** how long one area's handful takes to land */
 const PER_AREA = 620;
 

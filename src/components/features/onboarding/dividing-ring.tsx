@@ -59,13 +59,14 @@ export function DividingRing({
     return () => timers.forEach(clearTimeout);
   }, [parts, onDone]);
 
-  /* where each arc starts, so they chase each other round */
-  let run = 0;
-  const arcs = parts.map((e) => {
-    const start = run;
-    run += e.pct / total;
-    return { ...e, start, frac: e.pct / total };
-  });
+  /* where each arc starts, so they chase each other round.
+     Derived from what came before rather than accumulated, so
+     nothing is reassigned once the render is done. */
+  const arcs = parts.map((e, i) => ({
+    ...e,
+    start: parts.slice(0, i).reduce((a, p) => a + p.pct, 0) / total,
+    frac: e.pct / total,
+  }));
 
   const shown = arcs.slice(0, at + 1).reduce((a, e) => a + e.pct, 0);
   const amount = Math.round((flex * shown) / total);
