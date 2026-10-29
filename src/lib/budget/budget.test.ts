@@ -18,7 +18,8 @@ import {
   baseOf, incomeSettled, daysLeft, isFuture, shiftMonth, monthKey,
   makeHundred, recommendedSplit,
   AREAS, splitFromItems, defaultPicks,
-  signals, idleRotation,
+  signals, idleRotation, islandLine,
+  mayPlay, greetingFor, pick, COOLDOWN,
   dayStrip, nextWin, goalDone,
   readLayout, moveCard, nextWidth, isDefault, DASH_CARDS, WIDTHS, reorder,
   cashFlow, savingsRate, spendByCategory, insights, lastMonth, upcomingBills,
@@ -839,5 +840,126 @@ describe("signals", () => {
     for (const s of signals(data, st, { now })) {
       expect(s.line.length).toBeLessThanOrEqual(34);
     }
+  });
+});
+
+/* ---- the island's one line ---- */
+
+describe("islandLine", () => {
+  const now = new Date(2026, 9, 26);
+  const data = seedBudget(now);
+  const st = stats(data, "2026-10", now);
+
+  it("asks for setup when there is nothing to report", () => {
+    const bare = {
+      ...data,
+      bills: [],
+      envelopes: [],
+      settings: { ...data.settings, income: 0 },
+    };
+    const line = islandLine(bare, stats(bare, "2026-10", now), { now });
+    expect(line.text).toBe("Set up your budget");
+  });
+
+  it("names the worst overspent envelope before anything else", () => {
+    const line = islandLine(
+      data,
+      {
+        ...st,
+        envRows: [
+          { ...st.envRows[0], name: "Groceries", status: "over", spent: 620, planned: 500 },
+        ],
+        billRows: [{ ...data.bills[0], planned: 100, spent: 0, paid: false, dueDay: 26 }],
+      },
+      { now },
+    );
+    expect(line.tone).toBe("bad");
+    expect(line.text).toBe("Groceries over by 120 DH");
+  });
+
+  it("counts a bill due in two days, after overspending", () => {
+    const line = islandLine(
+      data,
+      {
+        ...st,
+        envRows: [],
+        billRows: [
+          { ...data.bills[0], name: "Rent", planned: 3500, spent: 0, paid: false, dueDay: 28 },
+        ],
+      },
+      { now },
+    );
+    expect(line.tone).toBe("warn");
+    expect(line.text).toBe("Rent in 2 days");
+  });
+
+  it("says today rather than in 0 days", () => {
+    const line = islandLine(
+      data,
+      {
+        ...st,
+        envRows: [],
+        billRows: [
+          { ...data.bills[0], name: "Rent", planned: 3500, spent: 0, paid: false, dueDay: 26 },
+        ],
+      },
+      { now },
+    );
+    expect(line.text).toBe("Rent today");
+  });
+
+  it("falls back to what is free today", () => {
+    const line = islandLine(
+      data,
+      { ...st, envRows: [], billRows: [], perDay: 180 },
+      { now },
+    );
+    expect(line.text).toBe("180 DH free today");
+    expect(line.value).toBe(180);
+  });
+
+  it("gives every line a figure that can be counted, or none at all", () => {
+    for (const s of [st, { ...st, envRows: [], billRows: [], perDay: 180 }]) {
+      const line = islandLine(data, s, { now });
+      if (line.value !== undefined) {
+        expect(`${line.prefix}${line.value}${line.suffix}`).toBe(line.text);
+      }
+    }
+  });
+});
+
+/* ---- the island's moments ---- */
+
+describe("moments", () => {
+  it("never plays two at once", () => {
+    const state = { playing: "ripple" as const, lastAt: {} };
+    expect(mayPlay("blink", state)).toBe(false);
+  });
+
+  it("lets an event interrupt a flourish, never the reverse", () => {
+    expect(mayPlay("received", { playing: "ripple", lastAt: {} })).toBe(true);
+    expect(mayPlay("ripple", { playing: "received", lastAt: {} })).toBe(false);
+  });
+
+  it("holds each kind to its own cooldown", () => {
+    const now = 1_000_000;
+    const state = { playing: null, lastAt: { ripple: now - 60_000 } };
+    expect(mayPlay("ripple", state, now)).toBe(false);
+    expect(mayPlay("ripple", state, now + COOLDOWN.ripple)).toBe(true);
+  });
+
+  it("greets in the morning and the evening, and not at noon", () => {
+    expect(greetingFor(new Date(2026, 9, 26, 8))?.text).toBe("Good morning");
+    expect(greetingFor(new Date(2026, 9, 26, 20))?.text).toBe("Good evening");
+    expect(greetingFor(new Date(2026, 9, 26, 14))).toBeNull();
+  });
+
+  it("picks the most important of several", () => {
+    const got = pick([
+      { kind: "blink", hold: 0 },
+      { kind: "received", text: "in", hold: 3000 },
+      { kind: "ripple", hold: 0 },
+    ]);
+    expect(got?.kind).toBe("received");
   });
 });

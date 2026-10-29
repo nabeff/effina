@@ -20,3 +20,5 @@ export * from "./layout";
 export * from "./trends";
 export * from "./areas";
 export * from "./island";
+export * from "./island-line";
+export * from "./moments";

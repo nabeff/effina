@@ -19,6 +19,7 @@ import { Section } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Stat } from "@/components/ui/stat";
 import { useMounted } from "@/lib/hooks/use-mounted";
+import { useShell } from "@/lib/hooks/use-shell";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
 import { addTransaction, updateSettings } from "@/lib/supabase/mutations";
 import { tap } from "@/components/layout/native";
@@ -69,7 +70,9 @@ export default function DashboardPage() {
   /* today differs between the build and the browser, so the month
      is only resolved once mounted */
   const mounted = useMounted();
-  const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st, isLoading } = useMonth(mounted ? month : SKIP);
 
   const [repeating, setRepeating] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);

@@ -47,6 +47,18 @@ export function NoticeBell({ mounted }: { mounted: boolean }) {
 
   const count = noticeCount(list);
 
+  /* Grouped by how soon it matters. A warning and a bad notice
+     need you today, the rest is this week. One list of nine
+     reads as a wall, two lists of four read as a plan. */
+  const groups = useMemo(() => {
+    const today = list.filter((n) => n.tone === "bad" || n.tone === "warn");
+    const week = list.filter((n) => n.tone !== "bad" && n.tone !== "warn");
+    return [
+      { id: "today", name: "Today", items: today },
+      { id: "week", name: "This week", items: week },
+    ].filter((g) => g.items.length);
+  }, [list]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
@@ -79,7 +91,12 @@ export function NoticeBell({ mounted }: { mounted: boolean }) {
 
         {list.length ? (
           <div className="max-h-[min(420px,60dvh)] overflow-y-auto">
-            {list.map((n) => {
+            {groups.map((g) => (
+              <div key={g.id}>
+                <div className="sticky top-0 z-10 bg-popover/95 px-4 py-1.5 text-[11px] font-semibold tracking-[0.03em] text-muted-foreground uppercase backdrop-blur">
+                  {g.name}
+                </div>
+                {g.items.map((n) => {
               const Icon = icons[n.tone];
               const href = routes[n.action] ?? "/";
               return (
@@ -101,9 +118,11 @@ export function NoticeBell({ mounted }: { mounted: boolean }) {
                       {n.text}
                     </div>
                   </div>
-                </Link>
-              );
-            })}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="px-4 py-7 text-center">

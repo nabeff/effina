@@ -13,6 +13,8 @@ interface Stop {
 }
 
 const STOPS: Stop[] = [
+  { route: "/", target: "island", title: "Mazaj, up here",
+    text: "It says the one thing that matters about your money right now. Tap it, or press Command K, and you can ask it anything." },
   { route: "/", target: "hero", title: "Free to spend",
     text: "What is still yours this month after bills, savings and tax." },
   { route: "/", target: "split", title: "Where it all sits",
@@ -45,6 +47,16 @@ export function Tour({ onClose }: { onClose: () => void }) {
 
   const stop = STOPS[at];
   const last = at === STOPS.length - 1;
+
+  /* The island stop shows the panel itself, so the first thing
+     anybody sees of the assistant is the assistant, not a ring
+     drawn around a closed pill. */
+  useEffect(() => {
+    const wants = stop.target === "island";
+    window.dispatchEvent(
+      new CustomEvent("mazaj:island", { detail: wants }),
+    );
+  }, [stop.target]);
 
   /* follow the stop to its screen */
   useEffect(() => {

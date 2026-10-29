@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TabBar } from "@/components/layout/tab-bar";
 import { TopBar } from "@/components/layout/top-bar";
@@ -11,8 +12,28 @@ import { AddSheet } from "@/components/features/transactions/add-sheet";
 import { OnboardingGate } from "@/components/features/onboarding/gate";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
+import { ShellProvider } from "@/lib/hooks/use-shell";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ShellProvider>
+      <Shell>{children}</Shell>
+    </ShellProvider>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  const path = usePathname();
+
+  /* Every page opens at its top. Next preserves the scroll
+     position across routes, which means arriving at a new page
+     halfway down it is the default rather than the exception.
+     This runs after the new page has rendered, so nothing can
+     scroll back over it. */
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [path]);
+
   const [moreOpen, setMoreOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 

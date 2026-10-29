@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { TABS } from "@/lib/nav";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AccountMenu } from "./account-menu";
 
 /**
  * The desktop rail. Icons only, because nine labels would crowd
@@ -16,11 +15,7 @@ export function Sidebar({ overCount = 0 }: { overCount?: number }) {
   const path = usePathname();
 
   return (
-    <aside className="glass fixed top-1/2 left-4 z-50 hidden w-[70px] -translate-y-1/2 flex-col items-center gap-1.5 rounded-[30px] py-3.5 lg:flex">
-      <div className="mb-2">
-        <AccountMenu />
-      </div>
-
+    <aside className="glass fixed top-1/2 left-4 z-50 hidden w-[70px] -translate-y-1/2 flex-col items-center gap-1.5 rounded-[30px] py-4 lg:flex">
       <nav className="flex flex-col items-center gap-1.5">
         {TABS.map((t) => {
           const active = path === t.href;

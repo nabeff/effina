@@ -38,7 +38,12 @@ confirm it.`;
 export async function POST(req: Request) {
   const key = process.env.ANTHROPIC_API_KEY;
 
-  let body: { question?: string; context?: string[]; currency?: string };
+  let body: {
+    question?: string;
+    context?: string[];
+    currency?: string;
+    mock?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
@@ -50,10 +55,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply: "Ask me something about your month." });
   }
 
-  if (!key) {
+  /* Without a key the assistant cannot answer, but the panel
+     still has to be testable, so a local request may ask for a
+     canned reply. Never on a deployed host, where there is a
+     real key or an honest refusal. */
+  if (!key && process.env.NODE_ENV === "development" && body.mock) {
     return NextResponse.json({
       reply:
-        "The assistant is not connected yet. Add an ANTHROPIC_API_KEY and I will be able to answer.",
+        "You can spend 180 DH today. That keeps you on track for the 4 days left this month.",
+    });
+  }
+
+  if (!key) {
+    return NextResponse.json({
+      notConnected: true,
+      reply:
+        "The assistant is not connected yet. Add an ANTHROPIC_API_KEY to your environment and restart, and I will be able to answer.",
     });
   }
 

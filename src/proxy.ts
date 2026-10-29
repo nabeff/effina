@@ -34,13 +34,29 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  /* A design bench holds no data, so it needs no account. It
+     is not an auth route though: sending a signed in person
+     away from it defeats the point of being able to look at
+     it. */
+  const isBench =
+    path.startsWith("/notch-lab") || path.startsWith("/header-lab");
+
   const isAuthRoute = path.startsWith("/sign-in") || path.startsWith("/auth/");
 
   /* the offline fallback has to render with no session, since
      being offline is exactly when the session cannot be checked */
   if (path === "/offline") return response;
 
-  if (!user && !isAuthRoute) {
+  /* An API route answers with a status, never with somebody
+     else's HTML. Redirecting one to the sign in page makes every
+     fetch look like a network failure to the caller, which is
+     how the assistant came to say it could not be reached when
+     the real answer was that nobody was signed in. */
+  if (!user && path.startsWith("/api/")) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+
+  if (!user && !isAuthRoute && !isBench) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
     return NextResponse.redirect(url);

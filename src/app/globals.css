@@ -12,12 +12,21 @@
    Light is a deliberate second theme, not an inversion.
    ============================================================ */
 :root {
-  /* surfaces */
-  --background: #000000;
-  --card: #1c1c1e;
-  --card-2: #2c2c2e;
-  --popover: #2c2c2e;
-  --elevated: #2c2c2e;
+  /* Surfaces, as layers rather than one flat black.
+     Pure black is reserved for the island, so the one element
+     that should read as nearest the eye is the only thing
+     darker than the page it sits on. */
+  --background: #0b0b0d;
+  --chrome: #141416;      /* the bar and the rail */
+  --card: #1a1a1d;
+  --card-2: #232327;
+  --popover: #232327;
+  --elevated: #232327;
+  --ink: #000000;         /* the island, the darkest thing on screen */
+
+  /* one hairline, used by every surface that needs an edge */
+  --hairline: rgb(255 255 255 / 0.06);
+  --hairline-strong: rgb(255 255 255 / 0.1);
 
   /* text */
   --foreground: #ffffff;
@@ -25,9 +34,9 @@
   --subtle-foreground: #48484a;
 
   /* lines */
-  --border: #38383a;
-  --border-soft: #2c2c2e;
-  --input: #2c2c2e;
+  --border: #2e2e33;
+  --border-soft: #232327;
+  --input: #232327;
   --ring: #30d158;
 
   /* meaning, never decoration */
@@ -53,7 +62,7 @@
   --fill-2: rgb(120 120 128 / 0.22);
 
   /* glass, used by the rail, tab bar and sheets */
-  --glass: rgb(34 34 36 / 0.56);
+  --glass: rgb(20 20 22 / 0.72);
   --glass-border: rgb(255 255 255 / 0.08);
   --glass-highlight: rgb(255 255 255 / 0.1);
   --glass-blur: saturate(180%) blur(24px);
@@ -94,10 +103,15 @@
 
 .light {
   --background: #f2f2f7;
+  --chrome: #ffffff;
   --card: #ffffff;
   --card-2: #f2f2f7;
   --popover: #ffffff;
   --elevated: #ffffff;
+  --ink: #1c1c1e;
+
+  --hairline: rgb(0 0 0 / 0.07);
+  --hairline-strong: rgb(0 0 0 / 0.12);
 
   --foreground: #000000;
   --muted-foreground: #6c6c70;
@@ -136,10 +150,14 @@
 @media (prefers-color-scheme: light) {
   :root:not(.dark) {
     --background: #f2f2f7;
+    --chrome: #ffffff;
     --card: #ffffff;
     --card-2: #f2f2f7;
     --popover: #ffffff;
     --elevated: #ffffff;
+    --ink: #1c1c1e;
+    --hairline: rgb(0 0 0 / 0.07);
+    --hairline-strong: rgb(0 0 0 / 0.12);
     --foreground: #000000;
     --muted-foreground: #6c6c70;
     --subtle-foreground: #aeaeb2;
@@ -185,6 +203,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-chrome: var(--chrome);
+  --color-ink: var(--ink);
   --color-card: var(--card);
   --color-card-2: var(--card-2);
   --color-card-foreground: var(--card-foreground);
@@ -204,6 +224,8 @@
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
 
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
   --color-border: var(--border);
   --color-border-soft: var(--border-soft);
   --color-input: var(--input);
@@ -249,10 +271,37 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  /* A soft light from above. Without it the page is one flat
+     field and every surface on it looks pasted on. It is fixed
+     rather than scrolled, because a light source does not move
+     when you read further down. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(
+      120% 62% at 50% -14%,
+      rgb(255 255 255 / 0.045) 0%,
+      rgb(255 255 255 / 0.014) 38%,
+      transparent 72%
+    );
+  }
+
+  .light body::before {
+    background: radial-gradient(
+      120% 62% at 50% -14%,
+      rgb(0 0 0 / 0.035) 0%,
+      transparent 70%
+    );
+  }
+
   /* figures line up in columns everywhere they appear */
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+
 
   /* the frosted surfaces */
   .glass {
@@ -271,6 +320,27 @@
     }
   }
 
+  /* Tailwind v4 dropped the browser default of a pointer on
+     buttons, on the grounds that a native button does not show
+     one. In an app where almost nothing is a native control,
+     that leaves most of the interface feeling dead. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary,
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
@@ -278,6 +348,28 @@
   ::selection {
     background: color-mix(in srgb, var(--primary) 28%, transparent);
   }
+}
+
+/* ============================================================
+   Privacy.
+
+   Every amount in the app is .tabular, so one rule hides all of
+   them rather than a prop threaded through every component that
+   shows money. It unblurs on hover, so a single figure can be
+   checked without turning the whole thing off.
+
+   Deliberately outside @layer base, because a selector nothing
+   in the markup references statically can be pruned from a
+   layer, and this one only ever matches at runtime.
+   ============================================================ */
+[data-private="1"] .tabular {
+  filter: blur(7px);
+  transition: filter 0.22s var(--ease);
+  user-select: none;
+}
+
+[data-private="1"] .tabular:hover {
+  filter: blur(0);
 }
 
 /* ============================================================

@@ -1,253 +1,231 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import {
-  AlertCircle, ArrowDownLeft, ArrowRight, Check, FileText, Gauge,
-  Percent, Repeat, RefreshCw, Target, Sparkles, type LucideIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { idleRotation, type Signal } from "@/lib/budget";
+  useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
+} from "react";
+import { useRouter } from "next/navigation";
+import { HEAD_H, Notch, type Tone } from "./notch";
 import { Agent } from "./agent";
+import { useReducedMotion } from "framer-motion";
+import { useMoments } from "@/lib/hooks/use-moments";
+import {
+  idleRotation, type Line, type Moment, type Signal,
+} from "@/lib/budget";
 
 /**
  * Mazaj Island.
  *
- * One pill at the top of every screen that says the single most
- * important thing about your money right now, and opens into the
+ * The one element at the top of every screen that says what
+ * matters about your money right now, and opens into the
  * assistant when you ask it to.
  *
- * It is one element that changes shape, never several that swap
- * places. Framer's layout animation does the morph, so the pill
- * stretches into a panel the way a real object would rather than
- * one box fading out while another fades in.
+ * The shape and its light live in Notch. This decides what it
+ * says, how wide it should be, and when it opens.
  */
 
-const ICONS: Record<string, LucideIcon> = {
-  "alert-circle": AlertCircle,
-  "file-text": FileText,
-  gauge: Gauge,
-  "arrow-down-left": ArrowDownLeft,
-  repeat: Repeat,
-  percent: Percent,
-  target: Target,
-  "refresh-cw": RefreshCw,
-  check: Check,
-};
-
-const TONE: Record<string, string> = {
-  bad: "var(--destructive)",
-  warn: "var(--warning)",
-  good: "var(--primary)",
-  neutral: "var(--muted-foreground)",
-};
-
-/** the Apple spring, the same curve the rest of the app uses */
-const SPRING = { type: "spring", stiffness: 420, damping: 36, mass: 0.9 } as const;
-
+const MAX_W = 420;
 /** how long one idle line holds before the next */
 const ROTATE = 5200;
 
-export type IslandMode = "idle" | "alert" | "open";
+function toneOf(s?: Signal): Tone {
+  if (!s) return "good";
+  if (s.tone === "bad") return "bad";
+  if (s.tone === "warn") return "warn";
+  return "good";
+}
 
 export function Island({
   signals: all,
   currency,
-  syncing,
+  shutHeight,
+  maxWidth,
+  line,
+  onReady,
 }: {
   signals: Signal[];
   currency: string;
-  syncing?: boolean;
+  /** the header's current height, so the two share a centre */
+  shutHeight?: number;
+  /** the most it may take without reaching either side */
+  maxWidth?: number;
+  /** what the closed island should say */
+  line?: Line;
+  /** hands the moment player out, so a dev panel can drive it */
+  onReady?: (play: (m: Moment) => boolean) => void;
 }) {
-  const [mode, setMode] = useState<IslandMode>("idle");
+  const still = useReducedMotion();
+  const [open, setOpen] = useState(false);
   const [at, setAt] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  const [body, setBody] = useState<HTMLDivElement | null>(null);
+  /* an unsent line survives a close, because losing what
+     somebody typed is the rudest thing a panel can do */
+  const [draft, setDraft] = useState("");
+  const [scrollAt, setScrollAt] = useState(0);
+  const [bodyH, setBodyH] = useState(160);
+  const [vw, setVw] = useState(1280);
+  const [vh, setVh] = useState(900);
   const router = useRouter();
 
   const rotation = useMemo(() => idleRotation(all), [all]);
   const current = rotation[at % Math.max(1, rotation.length)] ?? rotation[0];
 
-  /* the pill rotates gently between the top two, and stops the
-     moment it is opened, because a line that changes while you
+  /* the moments, which are off entirely for anybody who has
+     asked for less motion */
+  const { moment, play } = useMoments({ enabled: !still });
+
+  /* the line changes gently while it is closed, and holds still
+     the moment it is opened, because a line that moves while you
      are reading it is the opposite of calm */
   useEffect(() => {
-    if (mode !== "idle" || rotation.length < 2) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
+    if (open || rotation.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => setAt((n) => n + 1), ROTATE);
     return () => clearInterval(t);
-  }, [mode, rotation.length]);
+  }, [open, rotation.length]);
 
-  /* an alert takes the island for a moment, then gives it back */
-  const flash = useCallback(() => {
-    setMode("alert");
-    setTimeout(() => setMode((m) => (m === "alert" ? "idle" : m)), 3400);
+  useEffect(() => {
+    const read = () => {
+      setVw(window.innerWidth);
+      setVh(window.innerHeight);
+    };
+    read();
+    window.addEventListener("resize", read);
+    return () => window.removeEventListener("resize", read);
   }, []);
 
-  /* the first time something bad appears, say so */
-  const announced = useRef<string | null>(null);
-  useEffect(() => {
-    const top = all[0];
-    if (!top) return;
-    if (top.tone !== "bad" && top.tone !== "warn") return;
-    if (announced.current === top.id) return;
-    announced.current = top.id;
-    flash();
-  }, [all, flash]);
+  /* the open height is whatever the panel's content needs. The
+     body only exists once the panel has mounted, so a callback
+     ref catches it the moment it appears. */
+  useLayoutEffect(() => {
+    if (!body) return;
+    const read = () => setBodyH(body.offsetHeight);
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(body);
+    const mo = new MutationObserver(read);
+    mo.observe(body, { childList: true, subtree: true, attributes: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+    };
+  }, [body]);
 
-  /* the keyboard way in */
+  /* Anything can ask the island to open or close by firing
+     this, which is how the tour can show the panel without the
+     header needing to know the tour exists. */
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      setOpen((e as CustomEvent<boolean>).detail !== false);
+    };
+    window.addEventListener("mazaj:island", onAsk);
+    return () => window.removeEventListener("mazaj:island", onAsk);
+  }, []);
+
+  /* Every way out runs the same close. Escape, the X, a click
+     outside and the header all call one function, so none of
+     them can drift into its own behaviour. */
+  const close = useCallback(() => setOpen(false), []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setMode((m) => (m === "open" ? "idle" : "open"));
+        setOpen((o) => !o);
       }
-      if (e.key === "Escape") setMode("idle");
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [close]);
 
-  const Icon = ICONS[current?.icon ?? "check"] ?? Check;
-  const colour = TONE[current?.tone ?? "good"];
-  const open = mode === "open";
+  /* a click anywhere else closes it */
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!box.current?.contains(e.target as Node)) close();
+    };
+    /* on the next frame, so the click that opened it does not
+       immediately close it again */
+    const t = setTimeout(
+      () => document.addEventListener("mousedown", onDown),
+      0,
+    );
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open, close]);
 
-  return (
-    <>
-      {/* a scrim, so opening the island quiets the page behind it */}
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
-            onClick={() => setMode("idle")}
-          />
-        ) : null}
-      </AnimatePresence>
+  /* Focus comes back to the island once it is shut, so somebody
+     on a keyboard is not left on a button that no longer
+     exists. */
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(() => {
+      box.current
+        ?.querySelector<HTMLButtonElement>("[data-island-trigger]")
+        ?.focus({ preventScroll: true });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [open]);
 
-      <motion.div
-        layout
-        transition={SPRING}
-        /* it hangs from the top, so growing taller only ever
-           pushes down into the page and never off the screen */
-        style={{ transformOrigin: "top center" }}
-        className={cn(
-          "relative z-50 origin-top self-start overflow-hidden rounded-[22px] border border-white/[0.07]",
-          "bg-[rgb(22_22_24/0.82)] backdrop-blur-xl",
-          "shadow-[0_10px_34px_-12px_rgb(0_0_0/0.75)]",
-          open ? "w-[min(440px,calc(100vw-32px))]" : "w-auto",
-        )}
-        animate={{ borderRadius: open ? 26 : 22 }}
-      >
-        {open ? (
-          <Agent
-            signals={all}
-            currency={currency}
-            onClose={() => setMode("idle")}
-            onGo={(href) => {
-              setMode("idle");
-              router.push(href);
-            }}
-          />
-        ) : (
-          <motion.button
-            layout
-            onClick={() => setMode("open")}
-            whileTap={{ scale: 0.96 }}
-            transition={SPRING}
-            aria-label="Open the assistant"
-            className="flex h-[38px] items-center gap-2.5 px-3.5 text-left"
-          >
-            {/* the dot, which breathes when nothing is wrong and
-                holds steady when something is */}
-            <motion.span
-              layout
-              className="relative grid size-[18px] flex-none place-items-center"
-            >
-              {syncing ? (
-                <motion.span
-                  className="absolute inset-0 rounded-full border-[1.5px] border-transparent"
-                  style={{ borderTopColor: colour }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
-                />
-              ) : current?.progress !== undefined ? (
-                <Ring value={current.progress} colour={colour} />
-              ) : (
-                <motion.span
-                  className="absolute inset-[3px] rounded-full"
-                  style={{ background: colour }}
-                  animate={
-                    current?.tone === "good"
-                      ? { opacity: [0.55, 1, 0.55], scale: [0.92, 1, 0.92] }
-                      : { opacity: 1, scale: 1 }
-                  }
-                  transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
-                />
-              )}
-              <Icon
-                className="relative size-[11px]"
-                style={{ color: current?.progress !== undefined || syncing ? colour : "transparent" }}
-                strokeWidth={2.6}
-              />
-            </motion.span>
-
-            {/* the line, which cross fades while the pill resizes */}
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={current?.id ?? "none"}
-                layout
-                initial={{ opacity: 0, y: 7, filter: "blur(3px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -7, filter: "blur(3px)" }}
-                transition={{ duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
-                className="block text-[12.5px] font-medium whitespace-nowrap"
-              >
-                {current?.line ?? "All good today"}
-              </motion.span>
-            </AnimatePresence>
-
-            {mode === "alert" && current?.href ? (
-              <motion.span
-                layout
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                className="flex items-center gap-1 text-[12px] text-muted-foreground"
-              >
-                <ArrowRight className="size-3" />
-              </motion.span>
-            ) : (
-              <motion.span layout className="flex-none text-muted-foreground/60">
-                <Sparkles className="size-[13px]" />
-              </motion.span>
-            )}
-          </motion.button>
-        )}
-      </motion.div>
-    </>
+  const go = useCallback(
+    (href: string) => {
+      setOpen(false);
+      router.push(href);
+    },
+    [router],
   );
-}
 
-/** A mini progress ring, for a signal that has a figure behind it. */
-function Ring({ value, colour }: { value: number; colour: string }) {
-  const r = 7;
-  const c = 2 * Math.PI * r;
+  /* Never taller than three fifths of the screen, so the input
+     is always on screen and reachable. The messages scroll
+     inside what is left. */
+  const maxH = Math.round(vh * 0.6);
+  /* the slot the header gives it, which already excludes both
+     sides and their gaps */
+  const room = Math.min(MAX_W, maxWidth ?? Infinity, vw - 40);
+
+  /* the line to show, from the caller or from the signal */
+  const shown: Line = line ?? {
+    id: current?.id ?? "calm",
+    tone: current?.tone ?? "good",
+    text: current?.line ?? "All good today",
+  };
+
+  useEffect(() => {
+    onReady?.(play);
+  }, [onReady, play]);
+
   return (
-    <svg viewBox="0 0 18 18" className="absolute inset-0 size-full -rotate-90">
-      <circle cx="9" cy="9" r={r} fill="none" stroke="var(--fill-2)" strokeWidth="2" />
-      <motion.circle
-        cx="9" cy="9" r={r}
-        fill="none"
-        stroke={colour}
-        strokeWidth="2"
-        strokeLinecap="round"
-        initial={{ strokeDasharray: `0 ${c}` }}
-        animate={{ strokeDasharray: `${Math.min(1, value) * c} ${c}` }}
-        transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
-      />
-    </svg>
+    <div ref={box} className="contents">
+    <Notch
+      tone={toneOf(current)}
+      open={open}
+      width={room}
+      height={Math.min(bodyH + HEAD_H, maxH)}
+      line={shown}
+      moment={moment}
+      shutHeight={shutHeight}
+      onOpen={() => setOpen(true)}
+      onClose={close}
+    >
+      <div ref={setBody}>
+        <Agent
+          signals={all}
+          currency={currency}
+          draft={draft}
+          onDraft={setDraft}
+          scrollAt={scrollAt}
+          onScrollAt={setScrollAt}
+          /* what the messages may use, once the header and the
+             input row have taken theirs */
+          maxBodyH={maxH - HEAD_H * 2 - 14}
+          onClose={close}
+          onGo={go}
+        />
+      </div>
+    </Notch>
+    </div>
   );
 }
