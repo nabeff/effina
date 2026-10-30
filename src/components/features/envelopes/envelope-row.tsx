@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { money, money0 } from "@/lib/utils/money";
 import type { EnvelopeRow as Row, MonthStats } from "@/types/budget";
@@ -16,12 +16,13 @@ const statusColor = {
  * neutral. Green is fine, orange is nearly out, red is over.
  */
 export function EnvelopeRow({
-  row, st, currency, onAdd,
+  row, st, currency, onAdd, onEdit,
 }: {
   row: Row;
   st: MonthStats;
   currency: string;
   onAdd: () => void;
+  onEdit: () => void;
 }) {
   const through =
     st.daysTotal > 0 ? ((st.daysTotal - st.daysLeft + 1) / st.daysTotal) * 100 : 100;
@@ -68,6 +69,14 @@ export function EnvelopeRow({
         className="grid size-7 flex-none place-items-center rounded-full bg-fill-2 text-muted-foreground transition-colors hover:text-foreground active:scale-[0.92]"
       >
         <Plus className="size-4" />
+      </button>
+
+      <button
+        onClick={onEdit}
+        aria-label={`Edit ${row.name}`}
+        className="grid size-7 flex-none place-items-center rounded-full text-subtle-foreground transition-colors hover:bg-fill-2 hover:text-foreground"
+      >
+        <SlidersHorizontal className="size-4" />
       </button>
     </div>
   );
