@@ -10,6 +10,7 @@ import { EnvelopeSheet } from "@/components/features/envelopes/envelope-sheet";
 import { AddSheet } from "@/components/features/transactions/add-sheet";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { money } from "@/lib/utils/money";
 import type { Envelope } from "@/types/budget";
 
@@ -19,7 +20,9 @@ export default function EnvelopesPage() {
   /** the envelope being edited, or null for a new one; closed when undefined */
   const [edit, setEdit] = useState<{ envelope: Envelope | null } | null>(null);
 
-  const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st, isLoading } = useMonth(mounted ? month : SKIP);
 
   if (!mounted || isLoading || !data || !st) {
     return <Skeleton className="h-[400px] rounded-[var(--radius)]" />;

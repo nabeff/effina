@@ -8,6 +8,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { noticeCount, notices } from "@/lib/budget";
 import type { Tone } from "@/types/budget";
 
@@ -37,7 +38,9 @@ const routes: Record<string, string> = {
  */
 export function NoticeBell({ mounted }: { mounted: boolean }) {
   const [open, setOpen] = useState(false);
-  const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st } = useMonth(mounted ? month : SKIP);
 
   const list = useMemo(
     () =>

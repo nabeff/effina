@@ -12,13 +12,16 @@ import { BillSheet } from "@/components/features/bills/bill-sheet";
 import { tap } from "@/components/layout/native";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { setBillPaid } from "@/lib/supabase/mutations";
 import { money } from "@/lib/utils/money";
 import type { Bill } from "@/types/budget";
 
 export default function BillsPage() {
   const mounted = useMounted();
-  const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st } = useMonth(mounted ? month : SKIP);
 
   const [sheet, setSheet] = useState<{ bill: Bill | null } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);

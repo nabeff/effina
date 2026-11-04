@@ -14,6 +14,7 @@ import { TxRow } from "@/components/features/transactions/tx-row";
 import { EditSheet } from "@/components/features/transactions/edit-sheet";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { deleteTransaction } from "@/lib/supabase/mutations";
 import { monthName } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
@@ -22,7 +23,9 @@ import type { Transaction } from "@/types/budget";
 export default function LogPage() {
   const mounted = useMounted();
 
-  const { data, stats: st, isLoading } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st, isLoading } = useMonth(mounted ? month : SKIP);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [editing, setEditing] = useState<Transaction | null>(null);

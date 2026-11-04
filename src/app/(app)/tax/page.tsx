@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { updateSettings } from "@/lib/supabase/mutations";
 import { debtState, taxState, taxYear } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
@@ -19,7 +20,9 @@ import { money } from "@/lib/utils/money";
 export default function TaxPage() {
   const mounted = useMounted();
 
-  const { data, stats } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats } = useMonth(mounted ? month : SKIP);
   const [paidDraft, setPaidDraft] = useState("");
 
   const save = useBudgetMutation(

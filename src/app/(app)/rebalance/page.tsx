@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MoveRow } from "@/components/features/rebalance/move-row";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useBudgetMutation, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { applyTransfers, undoTransfer } from "@/lib/supabase/mutations";
 import { donorRank, isoDate, planMoves } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
@@ -17,7 +18,9 @@ import { money } from "@/lib/utils/money";
 export default function RebalancePage() {
   const mounted = useMounted();
 
-  const { data, stats } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats } = useMonth(mounted ? month : SKIP);
 
   const apply = useBudgetMutation(
     async (

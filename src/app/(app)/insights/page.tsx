@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { SKIP, useMonth } from "@/lib/hooks/use-budget";
+import { useShell } from "@/lib/hooks/use-shell";
 import { notices } from "@/lib/budget";
 import { money } from "@/lib/utils/money";
 import type { Tone } from "@/types/budget";
@@ -46,7 +47,9 @@ const toneColor: Record<Tone, string> = {
 export default function InsightsPage() {
   const mounted = useMounted();
 
-  const { data, stats: st } = useMonth(mounted ? undefined : SKIP);
+  /* the header owns which month is on screen */
+  const { month } = useShell();
+  const { data, stats: st } = useMonth(mounted ? month : SKIP);
 
   const list = useMemo(
     () =>
